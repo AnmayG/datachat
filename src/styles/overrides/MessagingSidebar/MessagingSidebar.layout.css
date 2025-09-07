@@ -8,9 +8,11 @@
 .messaging__channel-list__header {
   display: flex;
   align-items: center;
-  padding-top: 30px;
+  padding-top: 0px;
   padding-inline: 25px;
   gap: 10px;
+  flex-shrink: 0;
+  min-height: 60px;
 }
 
 .messaging__channel-list__header__name {
@@ -37,7 +39,6 @@
   .messaging__sidebar {
     gap: 0;
     padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .messaging__channel-list__header {

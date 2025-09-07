@@ -20,7 +20,9 @@ const [REACT_TO_MESSAGE, RUN_GIPHY, SEND_YOUTUBE, DRAG_DROP, START_THREAD, SEND_
 
 export const useChecklist = (chatClient: StreamChat | null, targetOrigin: string) => {
   useEffect(() => {
-    const notify = notifyParent(targetOrigin);
+    // Only notify parent if we're in an iframe and have a valid targetOrigin
+    const isInIframe = window.parent !== window;
+    const notify = isInIframe && targetOrigin ? notifyParent(targetOrigin) : () => {};
 
     const handleNewEvent = (props: Event) => {
       const { message, type } = props;

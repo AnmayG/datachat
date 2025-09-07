@@ -1,0 +1,74 @@
+/* Mobile keyboard handling for message input */
+
+@media (max-width: 640px) {
+  .str-chat__container {
+    height: 100dvh;
+  }
+  
+  .str-chat {
+    height: 100dvh;
+  }
+  
+  .str-chat__channel {
+    height: 100dvh;
+    max-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .str-chat-view__channels {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+  
+  /* Window container should be flex column */
+  .str-chat__window {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  /* Header pinned to top */
+  .messaging__channel-header {
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  /* Message list should be scrollable and take remaining space */
+  .str-chat__message-list {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+  }
+  
+  /* Message input pinned to bottom */
+  .str-chat__message-input {
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+  }
+  
+}
+
+/* Additional iOS-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS only */
+  .str-chat__message-input {
+    position: -webkit-sticky;
+  }
+}
+
+/* Visual viewport API fallback for older browsers */
+@media (max-width: 640px) {
+  html {
+    height: -webkit-fill-available;
+  }
+  
+  body {
+    min-height: -webkit-fill-available;
+  }
+}

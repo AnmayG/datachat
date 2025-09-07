@@ -9,7 +9,7 @@ import { init } from 'emoji-mart';
 import './styles/index.css';
 
 import { LandingPage, OnboardingPage, HandshakePage, ChatPage } from './pages';
-
+import { getChannelListOptions } from './channelListOptions';
 
 import { authService } from './services/authService';
 import type { UserInfo, AuthState, OnboardingPreferences } from './types/auth';
@@ -157,11 +157,17 @@ const AppContent = (props: AppProps) => {
           !authState.isAuthenticated ? 
             <Navigate to="/login" replace /> : 
             <ChatPage 
-              {...props}
-              userToConnect={authState.user || props.userToConnect}
-              userToken={authState.streamToken || props.userToken}
+              apiKey={props.apiKey}
+              targetOrigin={props.targetOrigin}
+              userToConnect={{
+                id: authState.user?.id || '',
+                name: authState.user?.name,
+                image: authState.user?.image
+              }}
+              userToken={authState.streamToken}
+              channelListOptions={getChannelListOptions(authState.user?.id)}
             />
-        } 
+        }
       />
       <Route 
         path="/handshake" 

@@ -40,11 +40,11 @@ export class HandshakeService {
   private activeUsersListeners: Set<(users: ActiveUser[]) => void> = new Set();
   private connectionListeners: Set<(connected: boolean) => void> = new Set();
 
-  // constructor(baseUrl: string = 'https://api-datachat.loca.lt') {
+  // constructor(baseUrl: string = 'https://api-shakeonit.loca.lt') {
   //   this.baseUrl = baseUrl;
   // }
 
-  constructor(baseUrl: string = 'https://tucson-mar-single-foul.trycloudflare.com') {
+  constructor(baseUrl: string = 'https://f02833d3bd4c.ngrok-free.app') {
     this.baseUrl = baseUrl;
   }
 

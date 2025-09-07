@@ -1,0 +1,163 @@
+/* Dark mode specific overrides for pure black backgrounds with white borders */
+
+.str-chat.str-chat__theme-dark {
+    /* Pure black backgrounds */
+    --str-chat__background-color: #000000;
+    --str-chat__secondary-background-color: #000000;
+    --str-chat__primary-surface-color: #000000;
+    
+    /* Channel list backgrounds */
+    --str-chat__channel-list-background-color: #000000;
+    
+    /* Message list background */
+    --str-chat__message-list-background-color: #000000;
+    
+    /* Thread background */
+    --str-chat__thread-background-color: #000000;
+    
+    /* Header backgrounds */
+    --str-chat__header-background-color: #000000;
+}
+
+/* Remove all margins to ensure continuous borders */
+.str-chat.str-chat__theme-dark .str-chat__main-panel {
+    margin: 0;
+}
+
+.str-chat.str-chat__theme-dark .str-chat__channel {
+    margin: 0;
+}
+
+/* White borders for visual separation */
+.str-chat.str-chat__theme-dark .messaging__sidebar {
+    background: #000000;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+    height: 100vh;
+}
+
+.str-chat.str-chat__theme-dark .str-chat__channel-list {
+    background: #000000;
+    margin: 0;
+    padding: 0;
+}
+
+.str-chat.str-chat__theme-dark .str-chat__channel-preview__container {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+}
+
+.str-chat.str-chat__theme-dark .str-chat__channel-preview__container:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.str-chat.str-chat__theme-dark .str-chat__channel-preview__container--selected {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Headers with pure black background */
+.str-chat.str-chat__theme-dark .messaging-header,
+.str-chat.str-chat__theme-dark .str-chat__channel-header,
+.str-chat.str-chat__theme-dark .str-chat__header-livestream,
+.str-chat.str-chat__theme-dark .messaging__channel-header {
+    background: #000000 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: none !important;
+    margin: 0;
+    padding: 0 24px;
+    min-height: 60px;
+}
+
+/* Message input area */
+.str-chat.str-chat__theme-dark .str-chat__message-input {
+    background: #000000;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+    padding: 16px;
+}
+
+.str-chat.str-chat__theme-dark .str-chat__message-input-inner {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+}
+
+/* Message list */
+.str-chat.str-chat__theme-dark .str-chat__message-list {
+    background: #000000;
+    margin: 0;
+    padding: 0 24px;
+}
+
+.str-chat.str-chat__theme-dark .str-chat__list {
+    background: #000000;
+}
+
+/* Thread */
+.str-chat.str-chat__theme-dark .str-chat__thread {
+    background: #000000;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+}
+
+.str-chat.str-chat__theme-dark .str-chat__thread-header {
+    background: #000000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+}
+
+/* Message bubbles stay as configured */
+.str-chat.str-chat__theme-dark .str-chat__message--me .str-chat__message-bubble {
+    background: var(--app-color-blue);
+    border: none;
+}
+
+.str-chat.str-chat__theme-dark .str-chat__message--other .str-chat__message-bubble {
+    background: #2a2a2a;
+    border: none;
+}
+
+/* Channel list header */
+.str-chat.str-chat__theme-dark .messaging__channel-list__header {
+    background: #000000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+    padding: 0 25px;
+}
+
+/* Create channel button */
+.str-chat.str-chat__theme-dark .messaging__channel-list__header__button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.str-chat.str-chat__theme-dark .messaging__channel-list__header__button:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Ensure container has no gaps */
+.str-chat.str-chat__theme-dark .str-chat__container {
+    margin: 0;
+    padding: 0;
+}
+
+.str-chat.str-chat__theme-dark .str-chat-view {
+    margin: 0;
+    padding: 0;
+}
+
+.str-chat.str-chat__theme-dark .str-chat-view__channels {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    height: 100vh;
+}
+
+/* Remove any default spacing that might break border continuity */
+.str-chat.str-chat__theme-dark * {
+    box-sizing: border-box;
+}
+
+.str-chat.str-chat__theme-dark .str-chat__main-panel__wrapper {
+    margin: 0;
+    padding: 0;
+}

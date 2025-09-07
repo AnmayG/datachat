@@ -4,7 +4,6 @@ import * as Sentry from '@sentry/react';
 import './index.css';
 
 import App from './App';
-import { getImage } from './assets';
 import { getChannelListOptions } from './channelListOptions';
 import { ThemeContextProvider } from './context';
 import { UserResponse } from 'stream-chat';
@@ -20,19 +19,14 @@ if (process.env.NODE_ENV === 'production') {
 const urlParams = new URLSearchParams(window.location.search);
 const apiKey = urlParams.get('api_key') || process.env.REACT_APP_STREAM_KEY;
 console.log('API Key: ', apiKey);
-const user = urlParams.get('user') || process.env.REACT_APP_USER_ID;
-const userToken = urlParams.get('user_token') || process.env.REACT_APP_USER_TOKEN;
 const targetOrigin =
-  urlParams.get('target_origin') || (process.env.REACT_APP_TARGET_ORIGIN as string);
+  urlParams.get('target_origin') || process.env.REACT_APP_TARGET_ORIGIN || window.location.origin;
 
-const noChannelNameFilter = urlParams.get('no_channel_name_filter') || true;
-const skipNameImageSet = urlParams.get('skip_name_image_set') || false;
-
-const channelListOptions = getChannelListOptions(user);
+// User and token will now come from authentication
+// Creating empty defaults that will be overridden by authenticated values
+const channelListOptions = getChannelListOptions(undefined);
 const userToConnect: UserResponse = {
-  id: user!,
-  name: skipNameImageSet ? undefined : user!,
-  image: skipNameImageSet ? undefined : getImage(user!),
+  id: 'placeholder', // Will be replaced by authenticated user
   privacy_settings: {
     typing_indicators: {
       enabled: false,
@@ -48,7 +42,7 @@ root.render(
       <App
         apiKey={apiKey!}
         userToConnect={userToConnect}
-        userToken={userToken}
+        userToken={undefined} // Token will come from authentication
         targetOrigin={targetOrigin!}
         channelListOptions={channelListOptions}
       />

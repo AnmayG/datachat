@@ -120,7 +120,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin: appOnLogin, connecte
           <button className="x-footer-link" onClick={() => alert('Coming soon!')}>
             How It Works
           </button>
-          <span className="x-footer-copyright">© 2025 DataChat.</span>
+          <span className="x-footer-copyright">© 2025 ShakeOnIt.</span>
         </div>
       </footer>
 

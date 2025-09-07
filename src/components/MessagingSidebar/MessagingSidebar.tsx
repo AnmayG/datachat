@@ -34,22 +34,9 @@ const MessagingSidebar = ({
       <MessagingChannelListHeader onCreateChannel={onCreateChannel} />
       <ChannelList
         {...channelListOptions}
-        Preview={(props) => {
-          console.log('Channel data:', props.channel);
-          return <MessagingChannelPreview {...props} onClick={onPreviewSelect} />;
-        }}
-        LoadingErrorIndicator={() => {
-          console.log('ChannelList loading error');
-          return <div>Channel loading error</div>;
-        }}
-        EmptyStateIndicator={() => {
-          console.log('ChannelList empty state');
-          return <div>No channels found</div>;
-        }}
-        LoadingIndicator={() => {
-          console.log('ChannelList loading...');
-          return <div>Loading channels...</div>;
-        }}
+        Preview={(props) => (
+          <MessagingChannelPreview {...props} onClick={onPreviewSelect} />
+        )}
       />
     </div>
   );
