@@ -1130,7 +1130,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
               </div>
 
               <div className="handshake-events-section">
-                <h3>Manual Handshake</h3>
+                {/* <h3>Manual Handshake</h3>
                 <div className="manual-handshake">
                   <div className="handshake-action">
                     <button 
@@ -1143,7 +1143,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
                   </div>
                   <p className="connection-status">
                     {isConnectedToHandshake ? '🟢 Connected to handshake service' : '🔴 Disconnected from handshake service'}
-                  </p>
+                  </p> */}
                   <div className="blockchain-status">
                     <h4>Blockchain Status</h4>
                     <p className="wallet-status">
@@ -1158,10 +1158,10 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
                       </p>
                     )}
                   </div>
-                </div>
+                {/* </div> */}
               </div>
 
-              <div className="manual-request-section">
+              {/* <div className="manual-request-section">
                 <h3>Manual Blockchain Request</h3>
                 <div className="manual-request">
                   <div className="request-input">
@@ -1185,9 +1185,9 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
                     Send a blockchain transaction request to a specific wallet address.
                   </p>
                 </div>
-              </div>
+              </div> */}
 
-              <div className="active-users-section">
+              {/* <div className="active-users-section">
                 <h3>Who's Shaking Hands Right Now</h3>
                 <div className="active-users">
                   {getRecentlyActiveUsers().length === 0 ? (
@@ -1210,7 +1210,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
                     </div>
                   )}
                 </div>
-              </div>
+              </div> */}
 
               <div className="recent-events-section">
                 <h3>Recent Handshake Events</h3>
