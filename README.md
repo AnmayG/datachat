@@ -12,7 +12,7 @@
 ![alt text](screenshots/photo_8_2025-09-07_11-40-10.jpg)
 
 # Inner Workings Video
-[Link](https://www.youtube.com)
+[Link](https://youtu.be/noPm6m9mNHc)
 
 # Backend
 [Link to repo](https://github.com/AnmayG/datachat-api)
