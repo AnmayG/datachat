@@ -72,6 +72,12 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
   const [targetUserId, setTargetUserId] = useState('');
   const [manualRequestPending, setManualRequestPending] = useState(false);
   
+  // Auto blockchain trigger state
+  const [autoBlockchainTarget, setAutoBlockchainTarget] = useState<string | null>(null);
+  
+  // Track if user is actively participating in handshakes (motion OR manual)
+  const [isActivelyHandshaking, setIsActivelyHandshaking] = useState(false);
+  
   // Extract wallet address from message field (encoded as [WALLET:address])
   const extractWalletFromMessage = (message?: string) => {
     if (!message) return { cleanMessage: '', walletAddress: undefined };
@@ -431,6 +437,36 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
         extractedWallet: walletAddress,
         type: event.type
       });
+      
+      // DIRECT BLOCKCHAIN TRIGGER: If current user is actively handshaking AND we receive shake from someone else with wallet
+      if (isActivelyHandshaking && event.from_uid !== user?.id && walletAddress && connectedWallet && !blockchainTxPending) {
+        console.log('🚀 IMMEDIATE BLOCKCHAIN TRIGGER ACTIVATED!');
+        console.log('✅ Conditions met:', {
+          currentUserActivelyHandshaking: isActivelyHandshaking,
+          eventFromOtherUser: event.from_uid !== user?.id,
+          otherUserWallet: walletAddress,
+          myWallet: connectedWallet,
+          notPending: !blockchainTxPending,
+          differentWallets: walletAddress !== connectedWallet
+        });
+        
+        if (walletAddress !== connectedWallet) {
+          console.log('🎯 TRIGGERING BLOCKCHAIN TRANSACTION TO:', walletAddress);
+          console.log('👤 Target user:', event.from_name, 'ID:', event.from_uid);
+          setAutoBlockchainTarget(walletAddress);
+        } else {
+          console.log('❌ Cannot send transaction to yourself');
+        }
+      } else {
+        console.log('⏸️ Blockchain trigger conditions not met:', {
+          currentUserActivelyHandshaking: isActivelyHandshaking,
+          eventFromOtherUser: event.from_uid !== user?.id,
+          otherUserWallet: !!walletAddress,
+          myWallet: !!connectedWallet,
+          notPending: !blockchainTxPending
+        });
+      }
+      
       setRecentEvents(prev => {
         const newEvents = [event, ...prev].slice(0, 10); // Keep last 10 events
         console.log('📝 Updated recent events:', newEvents);
@@ -453,7 +489,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
       unsubscribeConnection();
       handshakeService.disconnect();
     };
-  }, [user]);
+  }, [user, isActivelyHandshaking, connectedWallet, blockchainTxPending]);
 
   // Periodically refresh active users
   useEffect(() => {
@@ -470,6 +506,16 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
   useEffect(() => {
     if (handshakeDetected && isConnectedToHandshake) {
       console.log('🤝 Sending detected handshake event (motion-based)');
+      
+      // Set actively handshaking state for blockchain trigger
+      setIsActivelyHandshaking(true);
+      
+      // Clear the state after 10 seconds
+      setTimeout(() => {
+        setIsActivelyHandshaking(false);
+        console.log('⏰ Motion handshake window expired');
+      }, 10000);
+      
       handshakeService.sendHandshake('detected', undefined, `Motion detected with ${peakCount} peaks`, undefined, connectedWallet || undefined)
         .then((result) => {
           console.log('✅ Handshake event sent successfully:', result);
@@ -489,6 +535,16 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
 
     console.log('📤 Sending manual handshake...');
     console.log('💳 Connected wallet address:', connectedWallet);
+    
+    // Set actively handshaking state for blockchain trigger
+    setIsActivelyHandshaking(true);
+    
+    // Clear the state after 10 seconds
+    setTimeout(() => {
+      setIsActivelyHandshaking(false);
+      console.log('⏰ Manual handshake window expired');
+    }, 10000);
+    
     try {
       const result = await handshakeService.sendHandshake('detected', undefined, 'Manual handshake', undefined, connectedWallet || undefined);
       console.log('✅ Sent manual handshake successfully:', result);
@@ -848,7 +904,17 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
     }
   }, [connectedWallet, blockchainTxPending, lastHandshakePartner, peraWallet, algodClient]);
 
-  // Watch for handshake events to trigger blockchain transactions (BOTH users send transactions)
+  // Auto blockchain trigger effect
+  useEffect(() => {
+    if (autoBlockchainTarget && connectedWallet && !blockchainTxPending) {
+      console.log('🎯 AUTO BLOCKCHAIN TRIGGER: Sending transaction to', autoBlockchainTarget);
+      sendBlockchainHandshake(autoBlockchainTarget);
+      setAutoBlockchainTarget(null); // Clear the trigger
+    }
+  }, [autoBlockchainTarget, connectedWallet, blockchainTxPending, sendBlockchainHandshake]);
+
+  // Watch for handshake events to trigger blockchain transactions 
+  // REQUIREMENT: Current user MUST be shaking, and when another user is also shaking, send transaction with other user's ID
   useEffect(() => {
     const recentlyActiveUsers = getRecentlyActiveUsers();
     
@@ -856,70 +922,74 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
       recentlyActiveUsersCount: recentlyActiveUsers.length,
       recentlyActiveUsers: recentlyActiveUsers,
       currentUserId: user?.id,
+      currentUserIsShaking: isHandshaking,
       connectedWallet: connectedWallet,
       blockchainTxPending: blockchainTxPending
     });
     
-    // If we have 2 or more users (including ourselves) who are shaking hands, EACH USER SENDS TRANSACTION
-    if (recentlyActiveUsers.length >= 2 && user?.id && connectedWallet && !blockchainTxPending) {
+    // Check if current user is in the recently active users (meaning this user is shaking)
+    const currentUserIsInActiveUsers = user?.id && recentlyActiveUsers.some(u => u.uid === user.id);
+    
+    // CORE LOGIC: Current user MUST be shaking (isHandshaking) AND other users must also be shaking
+    if (isHandshaking && currentUserIsInActiveUsers && recentlyActiveUsers.length >= 2 && user?.id && connectedWallet && !blockchainTxPending) {
       
-      // Check if current user is among the recently active users (i.e., currently shaking)
-      const currentUserIsShaking = recentlyActiveUsers.some(u => u.uid === user.id);
+      console.log('🤝 ===== MUTUAL HANDSHAKE DETECTED =====');
+      console.log(`📊 Current user IS shaking + ${recentlyActiveUsers.length} total users shaking - TRIGGERING BLOCKCHAIN TRANSACTION`);
       
-      if (currentUserIsShaking) {
-        console.log('🤝 ===== MUTUAL HANDSHAKE DETECTED =====');
-        console.log(`📊 ${recentlyActiveUsers.length} users shaking simultaneously - THIS DEVICE WILL SEND TRANSACTION`);
+      // Find other users (not the current user)
+      const otherUsers = recentlyActiveUsers.filter(u => u.uid !== user.id);
+      
+      if (otherUsers.length > 0) {
+        console.log('👥 Other users detected shaking:', {
+          count: otherUsers.length,
+          users: otherUsers.map(u => ({ uid: u.uid, name: u.name, wallet_address: u.wallet_address }))
+        });
         
-        // Find other users (not the current user)
-        const otherUsers = recentlyActiveUsers.filter(u => u.uid !== user.id);
+        // Send transaction to the first other user found (using their user ID as parameter)
+        const targetUser = otherUsers[0];
         
-        if (otherUsers.length > 0) {
-          console.log('👥 Other users detected shaking:', {
-            count: otherUsers.length,
-            users: otherUsers.map(u => ({ uid: u.uid, name: u.name, wallet_address: u.wallet_address }))
+        console.log('🎯 Target user for blockchain transaction:', {
+          uid: targetUser.uid,
+          name: targetUser.name,
+          wallet_address: targetUser.wallet_address
+        });
+        
+        // Use the wallet address from the handshake event
+        const targetWalletAddress = targetUser.wallet_address;
+        
+        if (targetWalletAddress && targetWalletAddress !== connectedWallet) {
+          console.log('🚀 ===== BLOCKCHAIN TRANSACTION CONDITIONS MET =====');
+          console.log('✅ All requirements satisfied:', {
+            currentUserShaking: isHandshaking,
+            currentUserInActiveList: currentUserIsInActiveUsers,
+            otherUsersShaking: otherUsers.length > 0,
+            connectedWallet: connectedWallet,
+            targetWalletFound: targetWalletAddress,
+            notPending: !blockchainTxPending,
+            notSelf: targetWalletAddress !== connectedWallet
           });
-          
-          // For simplicity, send transaction to the first other user found
-          // In production, you might want to send to all or have a different strategy
-          const targetUser = otherUsers[0];
-          
-          console.log('🎯 Target user for blockchain transaction:', {
-            uid: targetUser.uid,
-            name: targetUser.name,
-            wallet_address: targetUser.wallet_address
+          console.log('🚀 THIS DEVICE initiating blockchain transaction with target user ID:', targetUser.uid);
+          sendBlockchainHandshake(targetWalletAddress);
+        } else {
+          console.log('⚠️ ===== BLOCKCHAIN TRANSACTION BLOCKED =====');
+          console.log('❌ Missing requirements:', {
+            reason: !targetWalletAddress ? 'No wallet address in handshake event' : 'Cannot send transaction to self',
+            targetUserUid: targetUser.uid,
+            targetUserName: targetUser.name,
+            targetWalletAddress: targetWalletAddress,
+            connectedWallet: connectedWallet,
+            solution: targetWalletAddress ? 'Cannot send blockchain transaction to yourself' : 'Other user needs to have wallet connected when shaking'
           });
-          
-          // Use the wallet address from the handshake event
-          const targetWalletAddress = targetUser.wallet_address;
-          
-          if (targetWalletAddress && targetWalletAddress !== connectedWallet) {
-            console.log('🚀 ===== BLOCKCHAIN TRANSACTION CONDITIONS MET =====');
-            console.log('✅ All requirements satisfied:', {
-              multipleUsersShaking: true,
-              currentUserShaking: currentUserIsShaking,
-              connectedWallet: connectedWallet,
-              targetWalletFound: targetWalletAddress,
-              notPending: !blockchainTxPending,
-              notSelf: targetWalletAddress !== connectedWallet
-            });
-            console.log('🚀 THIS DEVICE initiating blockchain transaction...');
-            sendBlockchainHandshake(targetWalletAddress);
-          } else {
-            console.log('⚠️ ===== BLOCKCHAIN TRANSACTION BLOCKED =====');
-            console.log('❌ Missing requirements:', {
-              reason: !targetWalletAddress ? 'No wallet address in handshake event' : 'Cannot send transaction to self',
-              targetUserUid: targetUser.uid,
-              targetUserName: targetUser.name,
-              targetWalletAddress: targetWalletAddress,
-              connectedWallet: connectedWallet,
-              solution: targetWalletAddress ? 'Cannot send blockchain transaction to yourself' : 'Other user needs to have wallet connected when shaking'
-            });
-          }
         }
-      } else {
-        console.log('⚠️ Current user is not actively shaking - not eligible for blockchain transaction');
       }
     } else {
+      // Debug why transaction is not being triggered
+      if (!isHandshaking) {
+        console.log('📱 Current user is NOT shaking (required for blockchain transaction)');
+      }
+      if (!currentUserIsInActiveUsers) {
+        console.log('📋 Current user not found in recently active users list');
+      }
       if (recentlyActiveUsers.length < 2) {
         console.log('📉 Not enough users shaking simultaneously (need 2+, have ' + recentlyActiveUsers.length + ')');
       }
@@ -930,7 +1000,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
         console.log('⏳ Blockchain transaction already pending');
       }
     }
-  }, [recentEvents, blockchainTxPending, user?.id, connectedWallet, getRecentlyActiveUsers, sendBlockchainHandshake]);
+  }, [recentEvents, blockchainTxPending, user?.id, connectedWallet, isHandshaking, getRecentlyActiveUsers, sendBlockchainHandshake]);
 
   // Get handshake type emoji
   const getHandshakeEmoji = (type: string) => {
