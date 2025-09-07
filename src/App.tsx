@@ -260,7 +260,11 @@ const AppContent = (props: AppProps) => {
         element={
           !authState.isAuthenticated ? 
             <Navigate to="/login" replace /> : 
-            <HandshakePage user={authState.user} />
+            <HandshakePage 
+              user={authState.user} 
+              peraWallet={peraWallet}
+              connectedWallet={connectedWallet}
+            />
         } 
       />
       <Route path="*" element={<Navigate to="/" replace />} />

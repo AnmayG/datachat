@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useThemeContext } from '../context';
 import { handshakeService } from '../services/handshakeService';
+import type { PeraWalletConnect } from '@perawallet/connect';
+import algosdk from 'algosdk';
 import './HandshakePage.css';
 
 interface AccelerometerData {
@@ -22,21 +24,23 @@ interface HandshakeEvent {
   timestamp: number;
 }
 
-interface ActiveUser {
-  uid: string;
-  name: string;
-  last_seen: number;
-  is_shaking: boolean;
-  handshake_type?: string;
-}
-
 interface HandshakePageProps {
   user?: { id: string; name?: string; image?: string } | null;
+  peraWallet: PeraWalletConnect;
+  connectedWallet: string | null;
 }
 
-const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
+const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connectedWallet }) => {
   const { themeClassName } = useThemeContext();
   const navigate = useNavigate();
+  
+  // Blockchain state
+  const [blockchainTxPending, setBlockchainTxPending] = useState(false);
+  const [lastHandshakePartner, setLastHandshakePartner] = useState<string | null>(null);
+  
+  // App configuration - you may want to make this configurable
+  const APP_ID = 123456; // Replace with your actual deployed app ID
+  const algodClient = useMemo(() => new algosdk.Algodv2('', 'https://testnet-api.algonode.cloud', ''), []);
   
   // Detection algorithm parameters
   const MAGNITUDE_THRESHOLD = 15;
@@ -58,17 +62,12 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
 
   // Handshake events state
   const [isConnectedToHandshake, setIsConnectedToHandshake] = useState(false);
-  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const [recentEvents, setRecentEvents] = useState<HandshakeEvent[]>([]);
   
   // Track users who have shaken hands recently (last 10 seconds)
-  const getRecentlyActiveUsers = () => {
+  const getRecentlyActiveUsers = useCallback(() => {
     const now = Date.now();
     const recentThreshold = 10000; // 10 seconds
-    
-    console.log('getRecentlyActiveUsers called');
-    console.log('Current time:', now);
-    console.log('Recent events:', recentEvents);
     
     const recentSenders = recentEvents
       .filter(event => {
@@ -79,7 +78,6 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
         }
         
         const isRecent = now - eventTime < recentThreshold;
-        console.log(`Event from ${event.from_name} at ${event.timestamp} (converted: ${eventTime}), age: ${now - eventTime}ms, isRecent: ${isRecent}`);
         return isRecent;
       })
       .map(event => ({
@@ -97,9 +95,8 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
       }, {} as Record<string, { uid: string; name: string; handshake_type: string; timestamp: number }>);
     
     const result = Object.values(recentSenders);
-    console.log('getRecentlyActiveUsers result:', result);
     return result;
-  };
+  }, [recentEvents]);
   
   const dataBufferRef = useRef<AccelerometerData[]>([]);
   const lastPeakTimeRef = useRef(0);
@@ -382,15 +379,11 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
     // Set up event listeners
     const unsubscribeEvents = handshakeService.onHandshakeEvent((event) => {
       console.log('Received handshake event:', event);
-      setRecentEvents(prev => {
-        const newEvents = [event, ...prev].slice(0, 10);
-        console.log('Updated recent events:', newEvents);
-        return newEvents;
-      });
+      setRecentEvents(prev => [event, ...prev].slice(0, 10)); // Keep last 10 events
     });
 
-    const unsubscribeUsers = handshakeService.onActiveUsersUpdate((users) => {
-      setActiveUsers(users);
+    const unsubscribeUsers = handshakeService.onActiveUsersUpdate(() => {
+      // Users are tracked in recentEvents instead
     });
 
     const unsubscribeConnection = handshakeService.onConnectionChange((connected) => {
@@ -445,6 +438,141 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
       console.error('Failed to send manual handshake:', error);
     }
   };
+
+  // Blockchain handshake function
+  const sendBlockchainHandshake = useCallback(async (otherUserAddress: string) => {
+    if (!connectedWallet) {
+      console.log('No wallet connected for blockchain transaction');
+      return;
+    }
+
+    if (blockchainTxPending) {
+      console.log('Blockchain transaction already pending, skipping...');
+      return;
+    }
+
+    if (lastHandshakePartner === otherUserAddress) {
+      console.log('Already sent blockchain handshake to this user recently');
+      return;
+    }
+
+    setBlockchainTxPending(true);
+    
+    try {
+      // Generate a random location hash (32 bytes)
+      const randomBytes = new Uint8Array(32);
+      crypto.getRandomValues(randomBytes);
+      const locationHash = Buffer.from(randomBytes).toString('base64');
+
+      // Convert location hash to bytes
+      const locHashBytes = new Uint8Array(Buffer.from(locationHash, 'base64'));
+
+      // Create ABI method interface
+      const abiMethod = new algosdk.ABIMethod({
+        name: 'request_handshake',
+        args: [
+          { type: 'address', name: 'other' },
+          { type: 'byte[]', name: 'loc_hash' }
+        ],
+        returns: { type: 'bool' }
+      });
+
+      // Create application call transaction with ABI encoding
+      const suggestedParams = await algodClient.getTransactionParams().do();
+      
+      // Combine length prefix and bytes for the byte[] argument
+      const lengthBytes = algosdk.encodeUint64(locHashBytes.length);
+      const combinedBytes = new Uint8Array(lengthBytes.length + locHashBytes.length);
+      combinedBytes.set(lengthBytes, 0);
+      combinedBytes.set(locHashBytes, lengthBytes.length);
+      
+      // Create box references for the smart contract
+      const connectedAccountPublicKey = algosdk.decodeAddress(connectedWallet).publicKey;
+      const destinationPublicKey = algosdk.decodeAddress(otherUserAddress).publicKey;
+      
+      const boxReferences = [
+        {
+          appIndex: APP_ID,
+          name: new Uint8Array([...Array.from(Buffer.from('c:', 'utf8')), ...Array.from(connectedAccountPublicKey)])
+        },
+        {
+          appIndex: APP_ID,
+          name: new Uint8Array([...Array.from(Buffer.from('p:', 'utf8')), ...Array.from(connectedAccountPublicKey)])
+        },
+        {
+          appIndex: APP_ID,
+          name: new Uint8Array([...Array.from(Buffer.from('c:', 'utf8')), ...Array.from(destinationPublicKey)])
+        },
+        {
+          appIndex: APP_ID,
+          name: new Uint8Array([...Array.from(Buffer.from('p:', 'utf8')), ...Array.from(destinationPublicKey)])
+        }
+      ];
+      
+      const appCallTxn = algosdk.makeApplicationCallTxnFromObject({
+        sender: connectedWallet,
+        suggestedParams,
+        appIndex: APP_ID,
+        onComplete: algosdk.OnApplicationComplete.NoOpOC,
+        appArgs: [
+          abiMethod.getSelector(),
+          algosdk.decodeAddress(otherUserAddress).publicKey,
+          combinedBytes
+        ],
+        boxes: boxReferences,
+      });
+
+      console.log('Sending blockchain handshake transaction...');
+
+      // Sign with Pera Wallet
+      const txnArray = [[{ txn: appCallTxn }]];
+      const signedTxns = await peraWallet.signTransaction(txnArray);
+
+      // Submit transaction
+      const txResponse = await algodClient.sendRawTransaction(signedTxns).do();
+      const txId = txResponse.txid;
+      const confirmedTxn = await algosdk.waitForConfirmation(algodClient, txId, 4);
+      
+      console.log('🎉 Blockchain handshake completed! Transaction ID:', txId);
+      console.log('Block confirmed:', confirmedTxn.confirmedRound);
+      
+      setLastHandshakePartner(otherUserAddress);
+      
+      // Reset the partner after some time to allow future transactions
+      setTimeout(() => {
+        setLastHandshakePartner(null);
+      }, 30000); // 30 seconds cooldown
+      
+    } catch (error) {
+      console.error('Blockchain handshake failed:', error);
+      
+      // Don't treat user cancellation as an error
+      if (error instanceof Error && 
+          (error.message.includes('Transaction signing was cancelled') || 
+           error.message.includes('User rejected'))) {
+        console.log('User cancelled blockchain transaction');
+      } else {
+        console.error('Unexpected blockchain error:', error);
+      }
+    } finally {
+      setBlockchainTxPending(false);
+    }
+  }, [connectedWallet, blockchainTxPending, lastHandshakePartner, peraWallet, algodClient]);
+
+  // Watch for handshake events to trigger blockchain transactions
+  useEffect(() => {
+    const recentlyActiveUsers = getRecentlyActiveUsers();
+    
+    // If we have exactly 2 users (including ourselves) who are shaking hands
+    if (recentlyActiveUsers.length === 2 && user?.id) {
+      const otherUser = recentlyActiveUsers.find(u => u.uid !== user.id);
+      
+      if (otherUser && !blockchainTxPending) {
+        console.log('Two users shaking hands detected, initiating blockchain transaction...');
+        sendBlockchainHandshake(otherUser.uid);
+      }
+    }
+  }, [recentEvents, blockchainTxPending, user?.id, getRecentlyActiveUsers, sendBlockchainHandshake]);
 
   // Get handshake type emoji
   const getHandshakeEmoji = (type: string) => {
@@ -573,14 +701,25 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
                   <p className="connection-status">
                     {isConnectedToHandshake ? '🟢 Connected to handshake service' : '🔴 Disconnected from handshake service'}
                   </p>
+                  <div className="blockchain-status">
+                    <h4>Blockchain Status</h4>
+                    <p className="wallet-status">
+                      {connectedWallet ? `🟢 Wallet: ${connectedWallet.substring(0, 8)}...` : '🔴 No wallet connected'}
+                    </p>
+                    {blockchainTxPending && (
+                      <p className="tx-pending">⏳ Blockchain transaction pending...</p>
+                    )}
+                    {lastHandshakePartner && (
+                      <p className="last-handshake">
+                        🎉 Last blockchain handshake: {lastHandshakePartner.substring(0, 8)}...
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="active-users-section">
                 <h3>Who's Shaking Hands Right Now</h3>
-                <button onClick={() => console.log('Manual check:', getRecentlyActiveUsers())} style={{marginBottom: '10px'}}>
-                  Debug: Check Active Users
-                </button>
                 <div className="active-users">
                   {getRecentlyActiveUsers().length === 0 ? (
                     <p className="no-users">No one is currently shaking hands</p>
