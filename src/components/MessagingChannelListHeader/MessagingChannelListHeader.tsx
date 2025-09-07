@@ -23,7 +23,7 @@ const MessagingChannelListHeader = React.memo((props: Props) => {
         <Avatar image={image} name={name} />
         <div className={`messaging__channel-list__header__name`}>{name || id}</div>
         <div className="messaging__channel-list__header__buttons">
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
           <button
             className={`messaging__channel-list__header__button`}
             onClick={() => navigate('/handshake')}

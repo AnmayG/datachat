@@ -51,21 +51,27 @@ body {
      */
   .str-chat__channel {
     height: var(--app-height);
+    width: 100vw;
+  }
+
+  .messaging__sidebar {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    transform: none;
+    background: var(--str-chat__secondary-background-color);
   }
 
   #mobile-channel-list {
     width: 100vw;
     height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    transform: translate3d(-100vw, 0, 0);
-    transition: transform 0.3s cubic-bezier(0, 0.52, 0, 1);
+    position: relative;
+    transform: none;
   }
 
   #mobile-channel-list.show {
-    transform: translate3d(0vw, 0, 0);
-    z-index: 1000;
+    transform: none;
+    z-index: auto;
   }
 
   .mobile-thread {
@@ -82,6 +88,29 @@ body {
 
   .mobile-thread.show {
     transform: translate3d(0vw, 0, 0);
+  }
+
+  .mobile-create-channel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--str-chat__background-color);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .str-chat__chat-view__channels {
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .str-chat__channel-list {
+    height: calc(100vh - 80px);
   }
 }
 
