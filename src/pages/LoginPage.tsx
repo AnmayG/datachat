@@ -1,48 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './LoginPage.css';
 import { useThemeContext } from '../context';
-import { PeraWalletConnect } from '@perawallet/connect';
+import type { PeraWalletConnect } from '@perawallet/connect';
 import { authService } from '../services/authService';
+import type { UserInfo } from '../types/auth';
 
 interface LoginPageProps {
-  onLogin?: (userInfo: { id: string; name: string; image?: string; token?: string; streamToken?: string }) => void;
+  onLogin?: (userInfo: UserInfo) => void;
+  connectedWallet: string | null;
+  peraWallet: PeraWalletConnect;
+  setConnectedWallet: (wallet: string | null) => void;
+  onClose?: () => void;
 }
 
-// Create the PeraWalletConnect instance outside of the component
-const peraWallet = new PeraWalletConnect({
-  chainId: 416002 // TestNet
-});
-
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, connectedWallet, peraWallet, setConnectedWallet, onClose }) => {
   const { themeClassName } = useThemeContext();
   const [loading, setLoading] = useState(false);
-  const [accountAddress, setAccountAddress] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
-  const isConnectedToPeraWallet = !!accountAddress;
+  const isConnectedToPeraWallet = !!connectedWallet;
 
 
-  useEffect(() => {
-    // Reconnect to the session when the component is mounted
-    peraWallet.reconnectSession().then(async (accounts) => {
-      // Setup the disconnect event listener
-      peraWallet.connector?.on("disconnect", handleDisconnectWalletClick);
-
-      if (accounts.length) {
-        setAccountAddress(accounts[0]);
-        
-        try {
-          // Authenticate with backend
-          await authenticateWithBackend(accounts[0]);
-        } catch (authError) {
-          console.error('Failed to authenticate on reconnect:', authError);
-        }
-      }
-    }).catch(error => {
-      console.log('Reconnect error:', error);
-    });
-  }, [onLogin]);
-
-  const authenticateWithBackend = async (walletAddress: string) => {
+  const authenticateWithBackend = React.useCallback(async (walletAddress: string) => {
     setAuthLoading(true);
     try {
       // Try to login first
@@ -51,19 +29,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         authResponse = await authService.login({
           wallet_address: walletAddress
         });
-        console.log('Login successful:', authResponse);
       } catch (loginError) {
-        console.log('Login failed, attempting registration:', loginError);
         // If login fails, try to register
         authResponse = await authService.register({
           wallet_address: walletAddress
         });
-        console.log('Registration successful:', authResponse);
       }
 
-      // Call onLogin with all the authentication data (stream token is already included in authResponse)
+      // Call onLogin with all the authentication data
       if (onLogin) {
-        console.log('Calling onLogin with backend authentication data');
         onLogin({
           id: authResponse.user.id,
           name: authResponse.user.name,
@@ -80,7 +54,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     } finally {
       setAuthLoading(false);
     }
-  };
+  }, [onLogin]);
+
 
   const handleConnectWalletClick = () => {
     setLoading(true);
@@ -90,7 +65,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         // Setup the disconnect event listener
         peraWallet.connector?.on("disconnect", handleDisconnectWalletClick);
 
-        setAccountAddress(newAccounts[0]);
+        setConnectedWallet(newAccounts[0]);
         
         try {
           // Authenticate with backend
@@ -113,7 +88,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   const handleDisconnectWalletClick = () => {
     peraWallet.disconnect();
-    setAccountAddress(null);
+    setConnectedWallet(null);
   };
 
 
@@ -122,15 +97,25 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="login-container">
         <div className="login-card">
           <header className="login-header">
-            <div className="logo">
-              <span className="brand-icon">🤝</span>
-              <h1>DataChat</h1>
+            <div className="modal-header-row">
+              <div className="logo">
+                <h1>DataChat</h1>
+              </div>
+              {onClose && (
+                <button
+                  className="modal-close"
+                  onClick={onClose}
+                  style={{ color: 'white' }}
+                >
+                  ×
+                </button>
+              )}
             </div>
-            <h2>Connect Your Wallet</h2>
+            <h2 className="modal-title">Connect Your Wallet</h2>
             <p>Connect your Pera Wallet to get started</p>
             {isConnectedToPeraWallet && (
-              <div style={{marginTop: '10px', padding: '10px', backgroundColor: '#e8f5e8', borderRadius: '5px', fontSize: '14px'}}>
-                Connected to Pera Wallet: {accountAddress?.substring(0, 8)}...{accountAddress?.substring(accountAddress.length - 8)}
+              <div style={{marginTop: '10px', padding: '10px', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '5px', fontSize: '14px', color: 'rgba(255, 255, 255, 0.9)'}}>
+                Connected to Pera Wallet: {connectedWallet?.substring(0, 8)}...{connectedWallet?.substring(connectedWallet.length - 8)}
               </div>
             )}
           </header>
@@ -142,10 +127,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               onClick={isConnectedToPeraWallet ? handleDisconnectWalletClick : handleConnectWalletClick}
               disabled={loading || authLoading}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 7.28V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-2.28c.6-.35 1-.98 1-1.72V9c0-.74-.4-1.38-1-1.72zM20 9v6h-7V9h7zM5 19V5h14v2H9c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h10v2H5z" />
+                <circle cx="16" cy="12" r="1.5" />
               </svg>
               {loading ? 'Connecting...' : authLoading ? 'Authenticating...' : (isConnectedToPeraWallet ? 'Disconnect Pera Wallet' : 'Connect with Pera Wallet')}
             </button>

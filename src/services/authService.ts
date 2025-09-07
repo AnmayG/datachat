@@ -20,8 +20,8 @@ interface LoginRequest {
 }
 
 interface RegisterRequest {
-  username: string;
-  name: string;
+  username?: string;
+  name?: string;
   wallet_address?: string;
   profile_pic_url?: string;
   bio?: string;
@@ -30,7 +30,7 @@ interface RegisterRequest {
 export class AuthService {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'http://localhost:8080') {
+  constructor(baseUrl: string = 'https://api-datachat.loca.lt') {
     this.baseUrl = baseUrl;
   }
 

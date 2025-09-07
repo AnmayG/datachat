@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import './OnboardingPage.css';
 import { useThemeContext } from '../context';
+import type { OnboardingPreferences } from '../types/auth';
 
 interface OnboardingPageProps {
-  onComplete?: (userPreferences: {
-    displayName: string;
-    avatar?: string;
-    notifications: boolean;
-    theme: 'light' | 'dark' | 'auto';
-  }) => void;
+  onComplete?: (userPreferences: OnboardingPreferences) => void;
 }
 
 const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
@@ -73,15 +69,15 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
           <div className="step-content">
             <div className="features-preview">
               <div className="feature-item">
-                <span className="feature-icon">💬</span>
+                <span className="feature-icon">Chat</span>
                 <span>Real-time messaging</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">👥</span>
+                <span className="feature-icon">Team</span>
                 <span>Team collaboration</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">🔔</span>
+                <span className="feature-icon">Notify</span>
                 <span>Smart notifications</span>
               </div>
             </div>
@@ -202,7 +198,7 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
         return (
           <div className="step-content">
             <div className="completion-content">
-              <div className="success-icon">🎉</div>
+              <div className="success-icon">Success!</div>
               <h3>Welcome aboard, {formData.displayName || 'there'}!</h3>
               <p>Your account is ready. You can now start messaging with your team and explore all the features.</p>
               <div className="next-steps">

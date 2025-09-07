@@ -1,7 +1,7 @@
 .login-page {
   min-height: 100vh;
   width: 100vw;
-  background: var(--str-chat__background-color);
+  background: var(--str-chat__secondary-background-color);
   color: var(--str-chat__primary-color);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   display: flex;
@@ -36,6 +36,42 @@
   margin-bottom: 2rem;
 }
 
+.modal-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.modal-header-row .logo {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.modal-header-row .modal-close {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: white !important;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.modal-header-row .modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .logo {
   display: flex;
   align-items: center;
@@ -52,19 +88,20 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--str-chat__accent-color);
+  color: white;
 }
 
-.login-header h2 {
+.login-header h2,
+.modal-title {
   margin: 0 0 0.5rem 0;
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--str-chat__primary-color);
+  color: white;
 }
 
 .login-header p {
   margin: 0;
-  color: var(--app-text-muted);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.9rem;
 }
 
@@ -186,8 +223,15 @@
   z-index: 2;
 }
 
+.wallet-connection {
+  margin-bottom: 1rem;
+}
+
 .login-footer {
   text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .login-footer p {
@@ -212,20 +256,47 @@
 
 .login-links {
   display: flex;
-  gap: 1.5rem;
+  gap: 2rem;
   justify-content: center;
   flex-wrap: wrap;
+  margin: 0;
 }
 
-.login-links a {
-  color: var(--app-text-muted);
+.login-links a,
+.login-modal .login-links a,
+.str-chat__theme-dark .login-links a {
+  color: rgba(255, 255, 255, 0.7) !important;
+  background: transparent !important;
+  background-color: transparent !important;
   text-decoration: none;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
   transition: color 0.2s ease;
+  position: relative;
+  padding: 0;
+  border: none;
 }
 
-.login-links a:hover {
-  color: var(--str-chat__accent-color);
+.login-links a:hover,
+.login-modal .login-links a:hover,
+.str-chat__theme-dark .login-links a:hover {
+  color: white !important;
+}
+
+.login-links a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 50%;
+  background-color: var(--str-chat__accent-color);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.login-links a:hover::after {
+  width: 100%;
 }
 
 /* Mobile First - Small devices */

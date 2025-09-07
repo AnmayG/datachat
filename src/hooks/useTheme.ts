@@ -8,7 +8,7 @@ export const SUPPORTED_THEMES: Record<Theme, ThemeClassName> = {
   dark: 'str-chat__theme-dark',
 } as const;
 
-export const DEFAULT_THEME: Theme = 'light';
+export const DEFAULT_THEME: Theme = 'dark';
 
 /**
  * Internal, handles the communication between Stream's website related to UI theme toggling.

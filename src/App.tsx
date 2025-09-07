@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import type { ChannelFilters, ChannelOptions, ChannelSort, TextComposerMiddleware } from 'stream-chat';
 import {
   Channel,
@@ -9,6 +9,7 @@ import {
 } from 'stream-chat-react';
 import clsx from 'clsx';
 import { createTextComposerEmojiMiddleware, EmojiPicker } from 'stream-chat-react/emojis';
+import { PeraWalletConnect } from '@perawallet/connect';
 
 import data from '@emoji-mart/data';
 import { init, SearchIndex } from 'emoji-mart';
@@ -23,14 +24,21 @@ import {
   SendButton,
 } from './components';
 
-import { LandingPage, LoginPage, OnboardingPage } from './pages';
+import { LandingPage, OnboardingPage } from './pages';
 
 import { useThemeContext } from './context';
 
 import { useChecklist, useMobileView, useUpdateAppHeightOnResize } from './hooks';
+import { authService } from './services/authService';
+import type { UserInfo, AuthState, OnboardingPreferences } from './types/auth';
 
 
 init({ data });
+
+// Create the PeraWalletConnect instance at app level
+const peraWallet = new PeraWalletConnect({
+  chainId: 416002 // TestNet
+});
 
 type AppProps = {
   apiKey: string;
@@ -44,13 +52,6 @@ type AppProps = {
   };
 };
 
-type AuthState = {
-  isAuthenticated: boolean;
-  hasCompletedOnboarding: boolean;
-  user: { id: string; name?: string; image?: string } | null;
-  token?: string;
-  streamToken?: string;
-};
 
 const noop = () => null;
 
@@ -130,7 +131,7 @@ const ChatApp = (props: AppProps) => {
   );
 };
 
-const App = (props: AppProps) => {
+const AppContent = (props: AppProps) => {
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     hasCompletedOnboarding: false,
@@ -138,25 +139,75 @@ const App = (props: AppProps) => {
     token: undefined,
     streamToken: undefined
   });
+  const [connectedWallet, setConnectedWallet] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const handleLogin = (userInfo: { id: string; name: string; image?: string; token?: string; streamToken?: string }) => {
-    console.log('App handleLogin called, setting authentication state for:', userInfo);
+  // Reconnect to wallet session on app load and authenticate
+  useEffect(() => {
+    peraWallet.reconnectSession().then(async (accounts) => {
+      if (accounts.length) {
+        setConnectedWallet(accounts[0]);
+        // Setup disconnect listener
+        peraWallet.connector?.on("disconnect", () => {
+          setConnectedWallet(null);
+          setAuthState({
+            isAuthenticated: false,
+            hasCompletedOnboarding: false,
+            user: null,
+            token: undefined,
+            streamToken: undefined
+          });
+        });
+
+        // Automatically authenticate with backend when wallet is connected
+        try {
+          let authResponse;
+          try {
+            authResponse = await authService.login({
+              wallet_address: accounts[0]
+            });
+          } catch (loginError) {
+            // If login fails, try to register
+            authResponse = await authService.register({
+              wallet_address: accounts[0]
+            });
+          }
+
+          // Set auth state
+          setAuthState({
+            isAuthenticated: true,
+            hasCompletedOnboarding: true,
+            user: {
+              id: authResponse.user.id,
+              name: authResponse.user.name,
+              image: authResponse.user.profile_pic_url
+            },
+            token: authResponse.token,
+            streamToken: authResponse.stream_token
+          });
+
+          // Navigate to chat automatically
+          navigate('/chat');
+        } catch (error) {
+          console.error('Auto-authentication failed:', error);
+        }
+      }
+    }).catch(error => {
+      console.log('Wallet reconnect error:', error);
+    });
+  }, [navigate]);
+
+  const handleLogin = (userInfo: UserInfo) => {
     setAuthState({
       isAuthenticated: true,
-      hasCompletedOnboarding: false,
+      hasCompletedOnboarding: true,
       user: userInfo,
       token: userInfo.token,
       streamToken: userInfo.streamToken
     });
-    console.log('Authentication state updated - isAuthenticated: true');
   };
 
-  const handleOnboardingComplete = (userPreferences: {
-    displayName: string;
-    avatar?: string;
-    notifications: boolean;
-    theme: 'light' | 'dark' | 'auto';
-  }) => {
+  const handleOnboardingComplete = (userPreferences: OnboardingPreferences) => {
     setAuthState(prev => ({
       ...prev,
       hasCompletedOnboarding: true,
@@ -169,43 +220,47 @@ const App = (props: AppProps) => {
   };
 
   return (
+    <Routes>
+      <Route path="/" element={<LandingPage onLogin={handleLogin} connectedWallet={connectedWallet} peraWallet={peraWallet} setConnectedWallet={setConnectedWallet} />} />
+      <Route 
+        path="/login" 
+        element={
+          authState.isAuthenticated ? 
+            <Navigate to="/chat" replace /> : 
+            <Navigate to="/" replace />
+        } 
+      />
+      <Route 
+        path="/onboarding" 
+        element={
+          !authState.isAuthenticated ? 
+            <Navigate to="/login" replace /> : 
+            authState.hasCompletedOnboarding ? 
+              <Navigate to="/chat" replace /> : 
+              <OnboardingPage onComplete={handleOnboardingComplete} />
+        } 
+      />
+      <Route 
+        path="/chat" 
+        element={
+          !authState.isAuthenticated ? 
+            <Navigate to="/login" replace /> : 
+            <ChatApp 
+              {...props}
+              userToConnect={authState.user || props.userToConnect}
+              userToken={authState.streamToken || props.userToken}
+            />
+        } 
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+const App = (props: AppProps) => {
+  return (
     <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage onLogin={handleLogin} />} />
-        <Route 
-          path="/login" 
-          element={
-            authState.isAuthenticated ? 
-              <Navigate to={authState.hasCompletedOnboarding ? "/chat" : "/onboarding"} replace /> : 
-              <Navigate to="/" replace />
-          } 
-        />
-        <Route 
-          path="/onboarding" 
-          element={
-            !authState.isAuthenticated ? 
-              <Navigate to="/login" replace /> : 
-              authState.hasCompletedOnboarding ? 
-                <Navigate to="/chat" replace /> : 
-                <OnboardingPage onComplete={handleOnboardingComplete} />
-          } 
-        />
-        <Route 
-          path="/chat" 
-          element={
-            !authState.isAuthenticated ? 
-              <Navigate to="/login" replace /> : 
-              !authState.hasCompletedOnboarding ? 
-                <Navigate to="/onboarding" replace /> : 
-                <ChatApp 
-                  {...props}
-                  userToConnect={authState.user || props.userToConnect}
-                  userToken={authState.streamToken || props.userToken}
-                />
-          } 
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AppContent {...props} />
     </Router>
   );
 };

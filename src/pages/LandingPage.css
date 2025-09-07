@@ -282,14 +282,18 @@
   box-sizing: border-box;
 }
 
-.x-btn-wallet {
-  background: var(--app-color-white, #ffffff);
-  color: var(--app-color-black, #000000);
-  border-color: var(--app-border-light, #d1d5db);
+.x-btn-getstarted {
+  background: var(--app-color-blue, #1098f7);
+  color: var(--app-color-white, #ffffff);
+  border-color: var(--app-color-blue, #1098f7);
 }
 
-.x-btn-wallet:hover {
-  background: rgba(255, 255, 255, 0.9);
+.x-btn-getstarted:hover {
+  background: var(--app-color-blue, #1098f7);
+  color: var(--app-color-white, #ffffff);
+  border-color: var(--app-color-blue, #1098f7);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(16, 152, 247, 0.3);
 }
 
 .wallet-icon {
@@ -298,63 +302,7 @@
   fill: currentColor;
 }
 
-.x-btn-create {
-  background: var(--app-color-blue, #1098f7);
-  color: var(--app-color-white, #ffffff);
-  border-color: var(--app-color-blue, #1098f7);
-}
 
-.x-btn-create:hover {
-  background: rgba(16, 152, 247, 0.9);
-}
-
-.x-btn-signin {
-  background: transparent;
-  color: var(--app-color-blue, #1098f7);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.x-btn-signin:hover {
-  background: rgba(16, 152, 247, 0.1);
-}
-
-.x-btn-grok {
-  background: transparent;
-  color: var(--app-color-white, #ffffff);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.x-btn-grok:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.grok-icon {
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
-}
-
-/* Divider */
-.x-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 1rem 0;
-}
-
-.x-divider::before,
-.x-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.x-divider span {
-  color: rgba(255, 255, 255, 0.6);
-  padding: 0 1rem;
-  font-size: 0.875rem;
-}
 
 /* Terms */
 .x-terms {
@@ -374,20 +322,6 @@
   text-decoration: underline;
 }
 
-/* Sign In Section */
-.x-signin-section {
-  margin-top: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.x-signin-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--app-color-white, #ffffff);
-  margin: 0 0 1rem 0;
-}
 
 /* Footer */
 .x-footer {
@@ -410,9 +344,15 @@
 }
 
 .x-footer-link {
+  background: none;
+  border: none;
+  padding: 0;
   color: rgba(255, 255, 255, 0.6);
   text-decoration: none;
   transition: color 0.2s ease;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
 }
 
 .x-footer-link:hover {
@@ -515,14 +455,6 @@
     font-size: 0.625rem;
   }
   
-  .x-signin-section {
-    margin-top: 1rem;
-  }
-  
-  .x-signin-title {
-    font-size: 1rem;
-    margin: 0 0 0.75rem 0;
-  }
 }
 
 @media (max-width: 768px) {
@@ -584,14 +516,6 @@
     font-size: 0.6rem;
   }
   
-  .x-signin-section {
-    margin-top: 0.75rem;
-  }
-  
-  .x-signin-title {
-    font-size: 0.9rem;
-    margin: 0 0 0.5rem 0;
-  }
   
   
   .x-content {
@@ -657,35 +581,6 @@
   transform: translateX(-50%) translateY(-50%);
 }
 
-.modal-header {
-  position: sticky;
-  top: 0;
-  background: var(--str-chat__background-color, white);
-  padding: 1rem;
-  border-bottom: 1px solid var(--app-border-light, #f1f1f1);
-  display: flex;
-  justify-content: flex-end;
-  z-index: 10;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  color: var(--str-chat__primary-color, black);
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.modal-close:hover {
-  background: var(--app-surface-hover, rgba(0, 0, 0, 0.04));
-}
 
 /* Override login page styles when in modal */
 .login-modal .login-page {
