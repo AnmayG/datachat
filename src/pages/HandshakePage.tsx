@@ -19,7 +19,6 @@ interface HandshakeEvent {
   type: 'wave' | 'high_five' | 'fist_bump' | 'peace' | 'thumbs_up' | 'detected';
   from_uid: string;
   from_name: string;
-  from_wallet_address?: string; // Add wallet address to the event
   to_uid?: string;
   message?: string;
   timestamp: number;
@@ -73,6 +72,20 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
   const [targetUserId, setTargetUserId] = useState('');
   const [manualRequestPending, setManualRequestPending] = useState(false);
   
+  // Extract wallet address from message field (encoded as [WALLET:address])
+  const extractWalletFromMessage = (message?: string) => {
+    if (!message) return { cleanMessage: '', walletAddress: undefined };
+    
+    const walletMatch = message.match(/\[WALLET:([^\]]+)\]/);
+    if (walletMatch) {
+      const walletAddress = walletMatch[1];
+      const cleanMessage = message.replace(/\s*\[WALLET:[^\]]+\]/, '').trim();
+      return { cleanMessage: cleanMessage || undefined, walletAddress };
+    }
+    
+    return { cleanMessage: message, walletAddress: undefined };
+  };
+
   // Toast notification state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -110,7 +123,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
       .map(event => ({
         uid: event.from_uid,
         name: event.from_name,
-        wallet_address: event.from_wallet_address, // Include wallet address
+        wallet_address: extractWalletFromMessage(event.message).walletAddress, // Extract from message
         handshake_type: event.type,
         timestamp: event.timestamp
       }))
@@ -408,13 +421,15 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
     // Set up event listeners
     const unsubscribeEvents = handshakeService.onHandshakeEvent((event) => {
       console.log('🎯 Received handshake event:', event);
-      console.log('💳 Event wallet address:', event.from_wallet_address);
+      const { cleanMessage, walletAddress } = extractWalletFromMessage(event.message);
+      console.log('💳 Extracted wallet address:', walletAddress);
       console.log('📍 Event details:', {
         from_uid: event.from_uid,
         from_name: event.from_name,
-        from_wallet_address: event.from_wallet_address,
-        type: event.type,
-        message: event.message
+        originalMessage: event.message,
+        cleanMessage,
+        extractedWallet: walletAddress,
+        type: event.type
       });
       setRecentEvents(prev => {
         const newEvents = [event, ...prev].slice(0, 10); // Keep last 10 events
@@ -1133,32 +1148,37 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
                   {recentEvents.length === 0 ? (
                     <p className="no-events">No recent handshake events</p>
                   ) : (
-                    recentEvents.map((event) => (
-                      <div key={event.id} className="event-item">
-                        <div className="event-emoji">{getHandshakeEmoji(event.type)}</div>
-                        <div className="event-details">
-                          <div className="event-text">
-                            <strong>{event.from_name}</strong> sent a {event.type}
-                            {event.message && <span className="event-message">: "{event.message}"</span>}
-                          </div>
-                          {event.from_wallet_address && (
-                            <div className="event-wallet">
-                              💳 Wallet: <code>{event.from_wallet_address}</code>
+                    recentEvents.map((event) => {
+                      const { cleanMessage, walletAddress } = extractWalletFromMessage(event.message);
+                      return (
+                        <div key={event.id} className="event-item">
+                          <div className="event-emoji">{getHandshakeEmoji(event.type)}</div>
+                          <div className="event-details">
+                            <div className="event-text">
+                              <strong>{event.from_name}</strong> sent a {event.type}
+                              {cleanMessage && <span className="event-message">: "{cleanMessage}"</span>}
                             </div>
-                          )}
-                          <div className="event-time">
-                            {new Date(event.timestamp).toLocaleTimeString()}
-                          </div>
-                          {/* Temporary debug info */}
-                          <div style={{fontSize: '10px', color: '#666', marginTop: '4px', fontFamily: 'monospace'}}>
-                            DEBUG: {JSON.stringify({
-                              from_wallet_address: event.from_wallet_address,
-                              hasWallet: !!event.from_wallet_address
-                            })}
+                            {walletAddress && (
+                              <div className="event-wallet">
+                                💳 Wallet: <code>{walletAddress}</code>
+                              </div>
+                            )}
+                            <div className="event-time">
+                              {new Date(event.timestamp).toLocaleTimeString()}
+                            </div>
+                            {/* Temporary debug info */}
+                            <div style={{fontSize: '10px', color: '#666', marginTop: '4px', fontFamily: 'monospace'}}>
+                              DEBUG: {JSON.stringify({
+                                originalMessage: event.message,
+                                cleanMessage,
+                                walletAddress,
+                                hasWallet: !!walletAddress
+                              })}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>

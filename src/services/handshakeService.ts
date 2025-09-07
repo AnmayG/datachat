@@ -3,7 +3,6 @@ interface HandshakeEvent {
   type: 'wave' | 'high_five' | 'fist_bump' | 'peace' | 'thumbs_up' | 'detected';
   from_uid: string;
   from_name: string;
-  from_wallet_address?: string; // Add wallet address to the event
   to_uid?: string;
   message?: string;
   timestamp: number;
@@ -111,12 +110,17 @@ export class HandshakeService {
       throw new Error('Must be connected to send handshake');
     }
 
+    // Encode wallet address in the message if provided
+    let finalMessage = message || '';
+    if (walletAddress) {
+      finalMessage = message ? `${message} [WALLET:${walletAddress}]` : `[WALLET:${walletAddress}]`;
+    }
+
     const payload = {
       type,
       to_uid: targetUserId,
-      message,
-      location,
-      from_wallet_address: walletAddress // Include wallet address in payload
+      message: finalMessage,
+      location
     };
 
     console.log('🚀 Sending handshake payload:', payload);
