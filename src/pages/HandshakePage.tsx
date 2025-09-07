@@ -408,6 +408,14 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
     // Set up event listeners
     const unsubscribeEvents = handshakeService.onHandshakeEvent((event) => {
       console.log('🎯 Received handshake event:', event);
+      console.log('💳 Event wallet address:', event.from_wallet_address);
+      console.log('📍 Event details:', {
+        from_uid: event.from_uid,
+        from_name: event.from_name,
+        from_wallet_address: event.from_wallet_address,
+        type: event.type,
+        message: event.message
+      });
       setRecentEvents(prev => {
         const newEvents = [event, ...prev].slice(0, 10); // Keep last 10 events
         console.log('📝 Updated recent events:', newEvents);
@@ -465,9 +473,11 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
     }
 
     console.log('📤 Sending manual handshake...');
+    console.log('💳 Connected wallet address:', connectedWallet);
     try {
       const result = await handshakeService.sendHandshake('detected', undefined, 'Manual handshake', undefined, connectedWallet || undefined);
       console.log('✅ Sent manual handshake successfully:', result);
+      console.log('🔍 Payload sent included wallet address:', connectedWallet);
     } catch (error) {
       console.error('❌ Failed to send manual handshake:', error);
     }
@@ -1131,8 +1141,20 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
                             <strong>{event.from_name}</strong> sent a {event.type}
                             {event.message && <span className="event-message">: "{event.message}"</span>}
                           </div>
+                          {event.from_wallet_address && (
+                            <div className="event-wallet">
+                              💳 Wallet: <code>{event.from_wallet_address}</code>
+                            </div>
+                          )}
                           <div className="event-time">
                             {new Date(event.timestamp).toLocaleTimeString()}
+                          </div>
+                          {/* Temporary debug info */}
+                          <div style={{fontSize: '10px', color: '#666', marginTop: '4px', fontFamily: 'monospace'}}>
+                            DEBUG: {JSON.stringify({
+                              from_wallet_address: event.from_wallet_address,
+                              hasWallet: !!event.from_wallet_address
+                            })}
                           </div>
                         </div>
                       </div>

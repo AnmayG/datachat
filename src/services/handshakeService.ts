@@ -119,6 +119,8 @@ export class HandshakeService {
       from_wallet_address: walletAddress // Include wallet address in payload
     };
 
+    console.log('🚀 Sending handshake payload:', payload);
+
     try {
       const response = await fetch(`${this.baseUrl}/handshake/send?uid=${this.userId}`, {
         method: 'POST',
@@ -133,7 +135,9 @@ export class HandshakeService {
         throw new Error(errorData.error || `Failed to send handshake: ${response.status}`);
       }
 
-      return response.json();
+      const result = await response.json();
+      console.log('✅ Handshake sent successfully, server response:', result);
+      return result;
     } catch (error) {
       console.error('Error sending handshake:', error);
       throw error;

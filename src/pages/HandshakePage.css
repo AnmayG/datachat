@@ -583,6 +583,22 @@
   font-style: italic;
 }
 
+.event-wallet {
+  font-size: 12px;
+  color: var(--str-chat__text-color-secondary);
+  margin: 4px 0;
+  font-family: monospace;
+}
+
+.event-wallet code {
+  background: var(--str-chat__background-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  border: 1px solid var(--str-chat__border-color);
+  color: var(--str-chat__text-color);
+}
+
 .event-time {
   font-size: 12px;
   color: var(--str-chat__text-color-secondary);
