@@ -817,7 +817,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
     }
   }, [connectedWallet, blockchainTxPending, lastHandshakePartner, peraWallet, algodClient]);
 
-  // Watch for handshake events to trigger blockchain transactions
+  // Watch for handshake events to trigger blockchain transactions (BOTH users send transactions)
   useEffect(() => {
     const recentlyActiveUsers = getRecentlyActiveUsers();
     
@@ -829,54 +829,86 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
       blockchainTxPending: blockchainTxPending
     });
     
-    // If we have exactly 2 users (including ourselves) who are shaking hands
-    if (recentlyActiveUsers.length >= 2 && user?.id && connectedWallet) {
-      const otherUser = recentlyActiveUsers.find(u => u.uid !== user.id);
+    // If we have 2 or more users (including ourselves) who are shaking hands, EACH USER SENDS TRANSACTION
+    if (recentlyActiveUsers.length >= 2 && user?.id && connectedWallet && !blockchainTxPending) {
       
-      if (otherUser && !blockchainTxPending) {
-        console.log('Two users shaking hands detected!', {
-          otherUserUid: otherUser.uid,
-          otherUserName: otherUser.name
-        });
+      // Check if current user is among the recently active users (i.e., currently shaking)
+      const currentUserIsShaking = recentlyActiveUsers.some(u => u.uid === user.id);
+      
+      if (currentUserIsShaking) {
+        console.log('🤝 ===== MUTUAL HANDSHAKE DETECTED =====');
+        console.log(`📊 ${recentlyActiveUsers.length} users shaking simultaneously - THIS DEVICE WILL SEND TRANSACTION`);
         
-        // Try to extract wallet address from user ID (if it's an Algorand address)
-        let otherWalletAddress = null;
+        // Find other users (not the current user)
+        const otherUsers = recentlyActiveUsers.filter(u => u.uid !== user.id);
         
-        // Check if the user ID looks like an Algorand address (58 characters, starts with uppercase letter)
-        if (otherUser.uid.length === 58 && /^[A-Z2-7]/.test(otherUser.uid)) {
-          otherWalletAddress = otherUser.uid;
-          console.log('📍 Found wallet address in user ID:', otherWalletAddress);
-        } else {
-          // For demo purposes, let's use a test address if the user ID indicates it's a test user
-          // In production, you'd want a proper user-to-wallet mapping system
-          if (otherUser.uid.includes('test') || otherUser.uid.includes('demo')) {
-            // Use a test wallet address - replace with your test address
-            otherWalletAddress = 'TESTNET_ADDRESS_PLACEHOLDER'; // Replace with actual test address
-            console.log('🧪 Using test wallet address for demo user');
+        if (otherUsers.length > 0) {
+          console.log('👥 Other users detected shaking:', {
+            count: otherUsers.length,
+            users: otherUsers.map(u => ({ uid: u.uid, name: u.name }))
+          });
+          
+          // For simplicity, send transaction to the first other user found
+          // In production, you might want to send to all or have a different strategy
+          const targetUser = otherUsers[0];
+          
+          console.log('🎯 Target user for blockchain transaction:', {
+            uid: targetUser.uid,
+            name: targetUser.name
+          });
+          
+          // Try to extract wallet address from user ID (if it's an Algorand address)
+          let targetWalletAddress = null;
+          
+          // Check if the user ID looks like an Algorand address (58 characters, starts with uppercase letter)
+          if (targetUser.uid.length === 58 && /^[A-Z2-7]/.test(targetUser.uid)) {
+            targetWalletAddress = targetUser.uid;
+            console.log('📍 Found wallet address in user ID:', targetWalletAddress);
+          } else {
+            // For demo purposes, let's use a test address if the user ID indicates it's a test user
+            // In production, you'd want a proper user-to-wallet mapping system
+            if (targetUser.uid.includes('test') || targetUser.uid.includes('demo')) {
+              // Use a test wallet address - replace with your test address
+              targetWalletAddress = 'TESTNET_ADDRESS_PLACEHOLDER'; // Replace with actual test address
+              console.log('🧪 Using test wallet address for demo user');
+            }
+          }
+          
+          if (targetWalletAddress && targetWalletAddress !== 'TESTNET_ADDRESS_PLACEHOLDER') {
+            console.log('🚀 ===== BLOCKCHAIN TRANSACTION CONDITIONS MET =====');
+            console.log('✅ All requirements satisfied:', {
+              multipleUsersShaking: true,
+              currentUserShaking: currentUserIsShaking,
+              connectedWallet: connectedWallet,
+              targetWalletFound: targetWalletAddress,
+              notPending: !blockchainTxPending,
+              notSelf: targetWalletAddress !== connectedWallet
+            });
+            console.log('🚀 THIS DEVICE initiating blockchain transaction...');
+            sendBlockchainHandshake(targetWalletAddress);
+          } else {
+            console.log('⚠️ ===== BLOCKCHAIN TRANSACTION BLOCKED =====');
+            console.log('❌ Missing requirements:', {
+              reason: targetWalletAddress === 'TESTNET_ADDRESS_PLACEHOLDER' ? 'Test placeholder address' : 'No wallet address found',
+              targetUserUid: targetUser.uid,
+              targetUserName: targetUser.name,
+              solution: 'User needs to have wallet address associated with their profile'
+            });
+            console.log('💡 For blockchain transactions to work, users need to have their wallet addresses associated with their profiles.');
           }
         }
-        
-        if (otherWalletAddress && otherWalletAddress !== 'TESTNET_ADDRESS_PLACEHOLDER') {
-          console.log('🚀 ===== BLOCKCHAIN TRANSACTION CONDITIONS MET =====');
-          console.log('✅ All requirements satisfied:', {
-            twoUsersShaking: true,
-            connectedWallet: connectedWallet,
-            otherWalletFound: otherWalletAddress,
-            notPending: !blockchainTxPending,
-            notSelf: otherWalletAddress !== connectedWallet
-          });
-          console.log('🚀 Initiating blockchain transaction...');
-          sendBlockchainHandshake(otherWalletAddress);
-        } else {
-          console.log('⚠️ ===== BLOCKCHAIN TRANSACTION BLOCKED =====');
-          console.log('❌ Missing requirements:', {
-            reason: otherWalletAddress === 'TESTNET_ADDRESS_PLACEHOLDER' ? 'Test placeholder address' : 'No wallet address found',
-            otherUserUid: otherUser.uid,
-            otherUserName: otherUser.name,
-            solution: 'User needs to have wallet address associated with their profile'
-          });
-          console.log('💡 For blockchain transactions to work, users need to have their wallet addresses associated with their profiles.');
-        }
+      } else {
+        console.log('⚠️ Current user is not actively shaking - not eligible for blockchain transaction');
+      }
+    } else {
+      if (recentlyActiveUsers.length < 2) {
+        console.log('📉 Not enough users shaking simultaneously (need 2+, have ' + recentlyActiveUsers.length + ')');
+      }
+      if (!connectedWallet) {
+        console.log('💳 No wallet connected');
+      }
+      if (blockchainTxPending) {
+        console.log('⏳ Blockchain transaction already pending');
       }
     }
   }, [recentEvents, blockchainTxPending, user?.id, connectedWallet, getRecentlyActiveUsers, sendBlockchainHandshake]);
