@@ -28,7 +28,7 @@ const targetOrigin =
 const noChannelNameFilter = urlParams.get('no_channel_name_filter') || true;
 const skipNameImageSet = urlParams.get('skip_name_image_set') || false;
 
-const channelListOptions = getChannelListOptions(!!noChannelNameFilter, user);
+const channelListOptions = getChannelListOptions(user);
 const userToConnect: UserResponse = {
   id: user!,
   name: skipNameImageSet ? undefined : user!,

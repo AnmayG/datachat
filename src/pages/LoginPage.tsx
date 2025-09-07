@@ -36,17 +36,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, connectedWallet, peraWal
         });
       }
 
-      // Call onLogin with all the authentication data
-      if (onLogin) {
-        onLogin({
-          id: authResponse.user.id,
-          name: authResponse.user.name,
-          image: undefined,
-          token: authResponse.token,
-          streamToken: authResponse.stream_token
-        });
-      }
-
       return authResponse;
     } catch (error) {
       console.error('Backend authentication failed:', error);
@@ -69,7 +58,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, connectedWallet, peraWal
         
         try {
           // Authenticate with backend
-          await authenticateWithBackend(newAccounts[0]);
+          const authResponse = await authenticateWithBackend(newAccounts[0]);
+          
+          // Call onLogin with the authentication data
+          if (onLogin) {
+            onLogin({
+              id: authResponse.user.id,
+              name: authResponse.user.name,
+              image: undefined,
+              token: authResponse.token,
+              streamToken: authResponse.stream_token
+            });
+          }
         } catch (authError) {
           console.error('Backend authentication failed:', authError);
           // You could show an error message to the user here

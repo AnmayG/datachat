@@ -70,6 +70,28 @@ const ChatApp = (props: AppProps) => {
     userData: userToConnect,
     tokenOrProvider: userToken,
   });
+  
+  useEffect(() => {
+    if (chatClient) {
+      console.log('Chat client connected:', {
+        userId: chatClient.userID,
+        connectionState: chatClient.wsConnection?.state,
+        isOnline: chatClient.wsConnection?.isOnline
+      });
+      
+      chatClient.on('connection.changed', (event) => {
+        console.log('Connection changed:', event);
+      });
+      
+      chatClient.on('connection.recovered', () => {
+        console.log('Connection recovered');
+      });
+      
+      chatClient.on('connection.error', (error) => {
+        console.error('Connection error:', error);
+      });
+    }
+  }, [chatClient]);
   const toggleMobile = useMobileView();
   const { themeClassName } = useThemeContext();
 
@@ -160,37 +182,37 @@ const AppContent = (props: AppProps) => {
         });
 
         // Automatically authenticate with backend when wallet is connected
-        try {
-          let authResponse;
-          try {
-            authResponse = await authService.login({
-              wallet_address: accounts[0]
-            });
-          } catch (loginError) {
-            // If login fails, try to register
-            authResponse = await authService.register({
-              wallet_address: accounts[0]
-            });
-          }
+        // try {
+        //   let authResponse;
+        //   try {
+        //     authResponse = await authService.login({
+        //       wallet_address: accounts[0]
+        //     });
+        //   } catch (loginError) {
+        //     // If login fails, try to register
+        //     authResponse = await authService.register({
+        //       wallet_address: accounts[0]
+        //     });
+        //   }
 
-          // Set auth state
-          setAuthState({
-            isAuthenticated: true,
-            hasCompletedOnboarding: true,
-            user: {
-              id: authResponse.user.id,
-              name: authResponse.user.name,
-              image: authResponse.user.profile_pic_url
-            },
-            token: authResponse.token,
-            streamToken: authResponse.stream_token
-          });
+        //   // Set auth state
+        //   setAuthState({
+        //     isAuthenticated: true,
+        //     hasCompletedOnboarding: true,
+        //     user: {
+        //       id: authResponse.user.id,
+        //       name: authResponse.user.name,
+        //       image: authResponse.user.profile_pic_url
+        //     },
+        //     token: authResponse.token,
+        //     streamToken: authResponse.stream_token
+        //   });
 
-          // Navigate to chat automatically
-          navigate('/chat');
-        } catch (error) {
-          console.error('Auto-authentication failed:', error);
-        }
+        //   // Navigate to chat automatically
+        //   navigate('/chat');
+        // } catch (error) {
+        //   console.error('Auto-authentication failed:', error);
+        // }
       }
     }).catch(error => {
       console.log('Wallet reconnect error:', error);
