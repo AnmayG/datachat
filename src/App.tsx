@@ -260,7 +260,7 @@ const AppContent = (props: AppProps) => {
         element={
           !authState.isAuthenticated ? 
             <Navigate to="/login" replace /> : 
-            <HandshakePage />
+            <HandshakePage user={authState.user} />
         } 
       />
       <Route path="*" element={<Navigate to="/" replace />} />
