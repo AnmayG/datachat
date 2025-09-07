@@ -1,7 +1,12 @@
+/* Ensure scrollability for handshake page */
 .handshake-page {
   min-height: 100vh;
   background: var(--str-chat__background-color);
-  padding: 20px;
+  padding: 20px 20px 40px 20px; /* Extra bottom padding for scrolling */
+  overflow-y: auto;
+  position: relative;
+  width: 100%;
+  max-height: none;
 }
 
 .handshake-container {
@@ -10,7 +15,8 @@
   background: var(--str-chat__secondary-background-color);
   border-radius: 16px;
   box-shadow: 0 4px 20px var(--app-shadow-subtle);
-  overflow: hidden;
+  position: relative;
+  overflow: visible;
 }
 
 .handshake-header {
@@ -20,6 +26,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  border-radius: 16px 16px 0 0;
 }
 
 .back-button {
@@ -45,6 +52,7 @@
 
 .handshake-content {
   padding: 32px;
+  overflow: visible;
 }
 
 .permission-section {

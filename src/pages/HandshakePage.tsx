@@ -106,6 +106,28 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
   const handshakeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const peakCountRef = useRef(0);
 
+  // Ensure page is scrollable
+  useEffect(() => {
+    // Add class to body to enable scrolling
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      rootElement.style.height = 'auto';
+      rootElement.style.overflow = 'auto';
+    }
+
+    return () => {
+      // Restore original styles when leaving the page
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      if (rootElement) {
+        rootElement.style.height = '';
+        rootElement.style.overflow = '';
+      }
+    };
+  }, []);
+
   // Calculate magnitude from accelerometer data
   const calculateMagnitude = useCallback((x: number, y: number, z: number): number => {
     return Math.sqrt(x * x + y * y + z * z);
