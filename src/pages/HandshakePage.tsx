@@ -1105,6 +1105,9 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
                   <p className="detection-status">
                     🟢 Detection is running continuously
                   </p>
+                  <p className="connection-status">
+                    {isConnectedToHandshake ? '🟢 Connected to handshake service' : '🔴 Disconnected from handshake service'}
+                  </p>
                 </div>
               </div>
 
@@ -1140,10 +1143,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
                     >
                       🤝 Send Handshake
                     </button>
-                  </div>
-                  <p className="connection-status">
-                    {isConnectedToHandshake ? '🟢 Connected to handshake service' : '🔴 Disconnected from handshake service'}
-                  </p> */}
+                  </div> */}
                   <div className="blockchain-status">
                     <h4>Blockchain Status</h4>
                     <p className="wallet-status">
