@@ -1,5 +1,5 @@
 # Demo Video
-[Link](https://www.youtube.com)
+[Link](https://drive.google.com/file/d/1WaO2sbvPTXgIwfOsTfqoDw5Q7URc6gfa/view?usp=sharing)
 
 # Screenshots
 ![alt text](screenshots/photo_1_2025-09-07_11-40-10.jpg)
