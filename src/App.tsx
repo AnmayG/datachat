@@ -75,8 +75,7 @@ const ChatApp = (props: AppProps) => {
     if (chatClient) {
       console.log('Chat client connected:', {
         userId: chatClient.userID,
-        connectionState: chatClient.wsConnection?.state,
-        isOnline: chatClient.wsConnection?.isOnline
+        wsConnection: !!chatClient.wsConnection
       });
       
       chatClient.on('connection.changed', (event) => {
@@ -219,7 +218,8 @@ const AppContent = (props: AppProps) => {
     }).catch(error => {
       console.log('Wallet reconnect error:', error);
     });
-  }, [navigate]);
+    }
+  }, [navigate, authState.isAuthenticated]);
 
   const handleLogin = (userInfo: UserInfo) => {
     setAuthState({
