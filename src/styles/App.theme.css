@@ -1,0 +1,113 @@
+.str-chat {
+    /* New color palette */
+    --app-color-black: #000000;
+    --app-color-blue: #1098f7;
+    --app-color-white: #ffffff;
+    --app-color-yellow: #edb230;
+    --app-color-orange: #e77728;
+
+    /* Semantic colors */
+    --app-surface-light: #f0f0f0;
+    --app-border-light: #f1f1f1;
+    --app-message-bubble-bg: #f5f5f5;
+    --app-text-muted: #858688;
+    --app-icon-muted: #858688;
+    --app-border-dark: #3e3e41;
+    --app-border-darker: #282a2d;
+    --app-surface-dark: #1a1a1a;
+    --app-text-dark: #0a0a0a;
+    --app-icon-light: #e9e9ea;
+    --app-header-dark: #333;
+
+    /* Shadow and overlay colors */
+    --app-shadow-subtle: rgba(0, 0, 0, 0.01387);
+    --app-shadow-light: rgba(0, 0, 0, 0.03);
+    --app-shadow-medium: rgba(0, 0, 0, 0.06);
+    --app-shadow-strong: rgba(0, 0, 0, 0.07);
+    --app-border-subtle: rgba(0, 0, 0, 0.09);
+    --app-overlay-light: rgba(0, 0, 0, 0.1);
+    --app-border-transparent: rgba(0, 0, 0, 0.14);
+    --app-border-medium: rgba(0, 0, 0, 0.16);
+    --app-overlay-medium: rgba(0, 0, 0, 0.2);
+    --app-border-strong: rgba(0, 0, 0, 0.29);
+    --app-overlay-strong: rgba(0, 0, 0, 0.3);
+    --app-overlay-darker: rgba(0, 0, 0, 0.33);
+    --app-border-focus: rgba(0, 0, 0, 0.36);
+    --app-surface-hover: rgba(0, 0, 0, 0.04);
+    --app-text-primary: rgba(0, 0, 0, 0.9);
+    --app-text-disabled: rgba(255, 255, 255, 0.4);
+    --app-text-secondary: rgba(255, 255, 255, 0.7);
+    --app-surface-overlay: rgba(255, 255, 255, 0.1);
+    --app-text-light: rgba(255, 255, 255, 0.9);
+    --app-background-overlay: rgba(255, 255, 255, 0.95);
+    --app-scrollbar-thumb: darkgrey;
+    
+    /* Map to Stream Chat variables */
+    --str-chat__primary-color: var(--app-color-black);
+    --str-chat__background-color: var(--app-color-white);
+    --str-chat__secondary-background-color: rgba(255, 255, 255, 0.95);
+    --str-chat__accent-color: var(--app-color-blue);
+    --str-chat__accent-secondary: var(--app-color-yellow);
+    --str-chat__accent-tertiary: var(--app-color-orange);
+    --str-chat__active-primary-color: var(--app-color-orange);
+    --str-chat__hover-color: var(--app-color-yellow);
+    --str-chat__thread-background-color: var(--str-chat__background-color);
+    --str-chat__notification-list-background-color: var(--str-chat__background-color);
+    --str-chat__message-list-background-color: var(--str-chat__background-color);
+
+    --messaging__header-shadow: 0 7px 9px rgba(0, 0, 0, 0.03), 0 1px 0 rgba(0, 0, 0, 0.03);
+
+    .avatar-subgroup.avatar-subgroup--split {
+        --str-chat__avatar-size: 20px;
+    }
+
+    .str-chat__message {
+        --str-chat__avatar-size: 32px;
+    }
+
+    --str-chat__avatar-size: 40px;
+}
+
+.str-chat.str-chat__theme-dark {
+    /* Dark theme using the same palette */
+    --str-chat__background-color: var(--app-color-black);
+    --str-chat__secondary-background-color: #1a1a1a;
+    --str-chat__primary-surface-color: var(--app-color-black);
+    --str-chat__secondary-surface-color: var(--app-color-black);
+    --str-chat__accent-color: var(--app-color-blue);
+    --str-chat__accent-secondary: var(--app-color-yellow);
+    --str-chat__accent-tertiary: var(--app-color-orange);
+    --str-chat__active-primary-color: var(--app-color-orange);
+    --str-chat__hover-color: var(--app-color-yellow);
+}
+
+:root {
+    --app-height: 100%;
+}
+
+html,
+body {
+    background: var(--str-chat__background-color);
+}
+
+*::-webkit-scrollbar {
+    width: 0.3rem;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--app-scrollbar-thumb);
+    border-radius: 2px;
+}
+
+body::-webkit-scrollbar {
+    background: transparent;
+}
+
+body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+    background-color: transparent;
+}
+

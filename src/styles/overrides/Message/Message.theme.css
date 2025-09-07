@@ -1,0 +1,36 @@
+.str-chat__theme-light {
+    --str-chat__own-message-bubble-background-color: var(--app-color-blue);
+    --str-chat__message-bubble-background-color: var(--app-message-bubble-bg);
+    --str-chat__message-bubble-border: 1px solid var(--app-border-transparent);
+    --str-chat__message-bubble-border-block-start: var(--str-chat__message-bubble-border);
+    --str-chat__message-bubble-border-block-end: var(--str-chat__message-bubble-border);
+    --str-chat__message-bubble-border-inline-start: var(--str-chat__message-bubble-border);
+    --str-chat__message-bubble-border-inline-end: var(--str-chat__message-bubble-border);
+}
+
+.str-chat__theme-dark {
+    --str-chat__own-message-bubble-background-color: var(--app-color-blue);
+    --str-chat__message-bubble-background-color: var(--str-chat__secondary-surface-color);
+}
+
+
+.str-chat__message--me .str-chat__message-bubble {
+    border: none;
+    color: var(--app-color-white);
+}
+
+.str-chat.str-chat__theme-dark .str-chat__message--system__date {
+    color: var(--app-text-secondary);
+}
+
+.str-chat.str-chat__theme-dark .str-chat__message--system__text p {
+    color: var(--app-text-secondary);
+}
+
+.str-chat.str-chat__theme-dark .str-chat__message--system__line {
+    background: var(--app-surface-overlay);
+}
+
+.str-chat__message-attachment-download-icon path {
+    fill: white;
+}

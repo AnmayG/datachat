@@ -1,0 +1,91 @@
+.channel-preview__container {
+  height: 56px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px
+}
+
+.channel-preview__container:hover {
+  background: var(--app-color-white);
+  box-shadow: 0 1px 5px var(--app-shadow-strong);
+  transition: background 0.1s ease-in-out;
+}
+
+.str-chat.str-chat__theme-dark .channel-preview__container:hover {
+  background: var(--str-chat__secondary-surface-color);
+}
+
+.channel-preview__container.selected {
+  background: var(--app-color-white);
+  box-shadow: 0 1px 5px var(--app-shadow-strong);
+  transition: background 0.1s ease-in-out;
+}
+
+.str-chat.str-chat__theme-dark .channel-preview__container.selected {
+  background: var(--str-chat__secondary-surface-color);
+}
+
+.channel-preview__content-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 8px;
+  margin-right: 8px;
+  width: 100%;
+}
+
+.channel-preview__content-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  height: 18px;
+  margin-bottom: 4px;
+}
+
+.channel-preview__content-name {
+  font-family: Helvetica Neue, sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--app-color-black);
+  margin: 0;
+  max-width: 158px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.str-chat.str-chat__theme-dark .channel-preview__content-name {
+  color: var(--app-color-white);
+}
+
+.channel-preview__content-time {
+  font-family: Helvetica Neue, sans-serif;
+  font-size: 11px;
+  color: var(--app-text-muted);
+  margin: 0;
+}
+
+.channel-preview__content-message {
+  font-family: Helvetica Neue, sans-serif;
+  font-size: 13px;
+  line-height: 16px;
+  margin: 0;
+  color: var(--app-text-muted);
+  height: 16px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channel-preview__content-message p {
+  margin: 0;
+}
+
+.channel-preview__container .str-chat__avatar {
+  margin-right: 0;
+}

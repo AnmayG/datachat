@@ -1,0 +1,220 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./LandingPage.css";
+import LoginPage from "./LoginPage";
+import { useThemeContext } from "../context";
+
+// Import user images
+import sarahImage from "../assets/userImages/photo-1438761681033-6461ffad8d80.jpeg";
+import mikeImage from "../assets/userImages/photo-1507003211169-0a1dd7228f2d.jpeg";
+import alexImage from "../assets/userImages/photo-1531251445707-1f000e1e87d0.jpeg";
+import emmaImage from "../assets/userImages/photo-1546967191-fdfb13ed6b1e.jpeg";
+import davidImage from "../assets/userImages/photo-1552058544-f2b08422138a.jpeg";
+import lisaImage from "../assets/userImages/photo-1549351236-caca0f174515.jpeg";
+
+interface LandingPageProps {
+  onLogin?: (userInfo: { id: string; name: string; image?: string; token?: string; streamToken?: string }) => void;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({ onLogin: appOnLogin }) => {
+  const { themeClassName } = useThemeContext();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [modalAnimationClass, setModalAnimationClass] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (showLoginModal) {
+      // Allow the modal to render first, then trigger the animation
+      const timer = setTimeout(() => {
+        setModalAnimationClass("show");
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setModalAnimationClass("");
+      return undefined;
+    }
+  }, [showLoginModal]);
+
+  const handleLogin = (userInfo: {
+    id: string;
+    name: string;
+    image?: string;
+    token?: string;
+    streamToken?: string;
+  }) => {
+    console.log('LandingPage handleLogin called with:', userInfo);
+    
+    // Call the app's authentication handler first
+    if (appOnLogin) {
+      console.log('Calling app onLogin handler');
+      appOnLogin(userInfo);
+    }
+    
+    setShowLoginModal(false);
+    console.log('Navigating to /onboarding...');
+    // Handle login success - could navigate to onboarding or chat
+    navigate("/onboarding");
+  };
+
+  return (
+    <div className={`str-chat x-homepage ${themeClassName}`}>
+      <div className="x-container">
+        <div className="x-left">
+          <div className="chat-bubbles-container">
+            <div className="floating-chat-bubble bubble-1">
+              <div className="chat-bubble-avatar">
+                <img src={lisaImage} alt="Lisa" className="user-avatar" />
+              </div>
+              <div className="chat-bubble-content">
+                <div className="chat-bubble-name">Lisa Zhang</div>
+                <div className="chat-bubble-message">
+                  Blockchain is the future
+                </div>
+                <div className="chat-bubble-time">just now</div>
+              </div>
+            </div>
+
+            <div className="floating-chat-bubble bubble-2">
+              <div className="chat-bubble-avatar">
+                <img src={sarahImage} alt="Sarah" className="user-avatar" />
+              </div>
+              <div className="chat-bubble-content">
+                <div className="chat-bubble-name">Sarah Chen</div>
+                <div className="chat-bubble-message">Great meeting you!</div>
+                <div className="chat-bubble-time">30s ago</div>
+              </div>
+            </div>
+
+            <div className="floating-chat-bubble bubble-3">
+              <div className="chat-bubble-avatar">
+                <img src={mikeImage} alt="Mike" className="user-avatar" />
+              </div>
+              <div className="chat-bubble-content">
+                <div className="chat-bubble-name">Mike Rodriguez</div>
+                <div className="chat-bubble-message">
+                  Tether has been shooting up 📈
+                </div>
+                <div className="chat-bubble-time">2m ago</div>
+              </div>
+            </div>
+
+            <div className="floating-chat-bubble bubble-4">
+              <div className="chat-bubble-avatar">
+                <img src={alexImage} alt="Alex" className="user-avatar" />
+              </div>
+              <div className="chat-bubble-content">
+                <div className="chat-bubble-name">Alex Kim</div>
+                <div className="chat-bubble-message">
+                  Thanks for the intro to the Algorand team!
+                </div>
+                <div className="chat-bubble-time">5m ago</div>
+              </div>
+            </div>
+
+            <div className="floating-chat-bubble bubble-5">
+              <div className="chat-bubble-avatar">
+                <img src={emmaImage} alt="Emma" className="user-avatar" />
+              </div>
+              <div className="chat-bubble-content">
+                <div className="chat-bubble-name">Emma Watson</div>
+                <div className="chat-bubble-message">
+                  These messages were generated by Claude!
+                </div>
+                <div className="chat-bubble-time">8m ago</div>
+              </div>
+            </div>
+
+            <div className="floating-chat-bubble bubble-6">
+              <div className="chat-bubble-avatar">
+                <img src={davidImage} alt="David" className="user-avatar" />
+              </div>
+              <div className="chat-bubble-content">
+                <div className="chat-bubble-name">David Park</div>
+                <div className="chat-bubble-message">Are we even real?!</div>
+                <div className="chat-bubble-time">12m ago</div>
+              </div>
+            </div>
+
+            <div className="floating-chat-bubble bubble-7 typing-indicator">
+              <div className="chat-bubble-avatar">
+                <img src={lisaImage} alt="Lisa" className="user-avatar" />
+              </div>
+              <div className="chat-bubble-content">
+                <div className="chat-bubble-name">Lisa Zhang</div>
+                <div className="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="x-right">
+          <div className="x-content">
+            <h1 className="x-title">DataChat</h1>
+            <h2 className="x-subtitle">
+              The World's First Quantum Secure AI Web3 Blockchain IoT Digital
+              Identity Social Graph
+            </h2>
+            <div className="x-auth-buttons">
+              <div className="x-main-buttons">
+                <button
+                  className="x-btn x-btn-wallet"
+                  onClick={() => {
+                    setShowLoginModal(true);
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" className="wallet-icon">
+                    <path d="M21 7.28V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-2.28c.6-.35 1-.98 1-1.72V9c0-.74-.4-1.38-1-1.72zM20 9v6h-7V9h7zM5 19V5h14v2H9c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h10v2H5z" />
+                    <circle cx="16" cy="12" r="1.5" />
+                  </svg>
+                  Connect Wallet
+                </button>
+              </div>
+
+              <p className="x-terms">
+                Connect your Algorand wallet to get started with DataChat.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer className="x-footer">
+        <div className="x-footer-links">
+          <a href="#" className="x-footer-link">
+            Github Source
+          </a>
+          <a href="#" className="x-footer-link">
+            How It Works
+          </a>
+          <span className="x-footer-copyright">© 2025 ShakeChat.</span>
+        </div>
+      </footer>
+
+      {showLoginModal && (
+        <>
+          <div
+            className="modal-overlay"
+            onClick={() => setShowLoginModal(false)}
+          />
+          <div className={`login-modal ${modalAnimationClass}`}>
+            <div className="modal-header">
+              <button
+                className="modal-close"
+                onClick={() => setShowLoginModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <LoginPage onLogin={handleLogin} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default LandingPage;

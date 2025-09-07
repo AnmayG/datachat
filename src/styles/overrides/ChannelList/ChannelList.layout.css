@@ -1,0 +1,50 @@
+.str-chat__channel-list {
+    padding: 10px 20px 20px;
+}
+
+.str-chat__channel-list-messenger__main {
+    display: grid;
+    grid-row-gap: 10px;
+    grid-auto-rows: max-content;
+}
+
+/* Mobile improvements for channel list */
+@media screen and (max-width: 640px) {
+    .str-chat__channel-list {
+        padding: 15px;
+    }
+
+    .str-chat__channel-preview {
+        padding: 12px 16px;
+        margin-bottom: 4px;
+        border-radius: 12px;
+        min-height: 64px;
+    }
+
+    .str-chat__channel-preview-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .str-chat__channel-preview-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .str-chat__channel-preview-last-message {
+        font-size: 14px;
+        line-height: 1.3;
+    }
+
+    .str-chat__channel-preview-avatar {
+        margin-right: 12px;
+    }
+
+    .str-chat__channel-preview-unread-count {
+        min-width: 20px;
+        height: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+}

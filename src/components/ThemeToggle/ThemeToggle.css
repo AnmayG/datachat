@@ -1,0 +1,57 @@
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--app-color-black);
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  color: var(--app-color-black);
+  position: relative;
+}
+
+.theme-toggle:hover {
+  background: var(--app-color-yellow);
+  border-color: var(--app-color-yellow);
+  transform: scale(1.05);
+}
+
+.theme-toggle:active {
+  background: var(--app-color-orange);
+  border-color: var(--app-color-orange);
+  transform: scale(0.95);
+}
+
+.theme-toggle.dark {
+  border-color: var(--app-color-white);
+  color: var(--app-color-white);
+}
+
+.theme-toggle.dark:hover {
+  background: var(--app-color-blue);
+  border-color: var(--app-color-blue);
+}
+
+.theme-toggle.dark:active {
+  background: var(--app-color-orange);
+  border-color: var(--app-color-orange);
+}
+
+.theme-toggle-icon {
+  transition: transform 0.2s ease-in-out;
+}
+
+.theme-toggle:hover .theme-toggle-icon {
+  transform: rotate(15deg);
+}
+
+.theme-toggle:focus {
+  outline: none !important;
+}
+
+.theme-toggle:focus-visible {
+  outline: none !important;
+}

@@ -1,0 +1,67 @@
+.str-chat__message--deleted:not(.str-chat__message-simple--me){
+    margin-inline-start: var(--str-chat__spacing-10)
+}
+
+.str-chat__message-simple:hover .str-chat__message-simple__actions__action--thread,
+.str-chat__message-simple:hover .str-chat__message-simple__actions__action--reactions,
+.str-chat__message-simple:hover .str-chat__message-simple__actions__action--options {
+    /*
+     * There is a rule which hides all actions on hover for screens < 960px wide.
+     * Here we override that behavior by explicitly enabling hover for all screen sizes.
+     * See: https://github.com/GetStream/stream-chat-react/issues/1641
+     */
+    display: flex;
+}
+
+.str-chat__message--system {
+    padding: 20px;
+}
+
+/* Mobile improvements for messages */
+@media screen and (max-width: 640px) {
+    .str-chat__message {
+        padding: 4px 16px;
+    }
+
+    .str-chat__message-simple {
+        padding: 2px 0;
+    }
+
+    .str-chat__message-simple__content {
+        max-width: calc(100vw - 100px);
+    }
+
+    .str-chat__message-text {
+        font-size: 16px;
+        line-height: 1.4;
+    }
+
+    .str-chat__message-simple__actions {
+        right: 8px;
+    }
+
+    .str-chat__message-simple__actions__action {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+
+    .str-chat__message-attachment {
+        max-width: calc(100vw - 80px);
+    }
+
+    .str-chat__message-attachment-file {
+        max-width: calc(100vw - 100px);
+    }
+
+    /* Better touch targets for message reactions */
+    .str-chat__message-reactions-list {
+        gap: 4px;
+    }
+
+    .str-chat__message-reaction {
+        min-width: 44px;
+        min-height: 32px;
+        padding: 4px 8px;
+    }
+}

@@ -1,0 +1,76 @@
+.messaging__sidebar {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.messaging__channel-list__header {
+  display: flex;
+  align-items: center;
+  padding-top: 30px;
+  padding-inline: 25px;
+  gap: 10px;
+}
+
+.messaging__channel-list__header__name {
+  line-height: 20px;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+.messaging__channel-list__header__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px;
+}
+
+.str-chat__load-more-button {
+  display: none;
+}
+
+/* Mobile improvements for sidebar */
+@media screen and (max-width: 640px) {
+  .messaging__sidebar {
+    gap: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .messaging__channel-list__header {
+    padding-top: 20px;
+    padding-inline: 20px;
+    padding-bottom: 10px;
+    gap: 12px;
+    border-bottom: 1px solid var(--app-border-light);
+  }
+
+  .messaging__channel-list__header__name {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .messaging__channel-list__header__button {
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--app-color-blue);
+    color: white;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .messaging__channel-list__header__button:hover {
+    opacity: 0.9;
+  }
+
+  .str-chat__channel-list {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
