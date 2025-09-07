@@ -1,3 +1,24 @@
+# Demo Video
+[Link](https://www.youtube.com)
+
+# Screenshots
+![alt text](screenshots/photo_1_2025-09-07_11-40-10.jpg)
+![alt text](screenshots/photo_2_2025-09-07_11-40-10.jpg)
+![alt text](screenshots/photo_3_2025-09-07_11-40-10.jpg)
+![alt text](screenshots/photo_4_2025-09-07_11-40-10.jpg)
+![alt text](screenshots/photo_5_2025-09-07_11-40-10.jpg)
+![alt text](screenshots/photo_6_2025-09-07_11-40-10.jpg)
+![alt text](screenshots/photo_7_2025-09-07_11-40-10.jpg)
+![alt text](screenshots/photo_8_2025-09-07_11-40-10.jpg)
+
+# Inner Workings Video
+[Link](https://www.youtube.com)
+
+# Backend
+[Link to repo](https://github.com/AnmayG/datachat-api)
+
+
+
 # Getting Started
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).\
