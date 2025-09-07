@@ -66,8 +66,22 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
     const now = Date.now();
     const recentThreshold = 10000; // 10 seconds
     
+    console.log('getRecentlyActiveUsers called');
+    console.log('Current time:', now);
+    console.log('Recent events:', recentEvents);
+    
     const recentSenders = recentEvents
-      .filter(event => now - event.timestamp < recentThreshold)
+      .filter(event => {
+        // Handle both milliseconds and seconds timestamps
+        let eventTime = event.timestamp;
+        if (eventTime < 1000000000000) { // If timestamp is in seconds, convert to milliseconds
+          eventTime = eventTime * 1000;
+        }
+        
+        const isRecent = now - eventTime < recentThreshold;
+        console.log(`Event from ${event.from_name} at ${event.timestamp} (converted: ${eventTime}), age: ${now - eventTime}ms, isRecent: ${isRecent}`);
+        return isRecent;
+      })
       .map(event => ({
         uid: event.from_uid,
         name: event.from_name,
@@ -82,7 +96,9 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
         return acc;
       }, {} as Record<string, { uid: string; name: string; handshake_type: string; timestamp: number }>);
     
-    return Object.values(recentSenders);
+    const result = Object.values(recentSenders);
+    console.log('getRecentlyActiveUsers result:', result);
+    return result;
   };
   
   const dataBufferRef = useRef<AccelerometerData[]>([]);
@@ -343,7 +359,12 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
 
     // Set up event listeners
     const unsubscribeEvents = handshakeService.onHandshakeEvent((event) => {
-      setRecentEvents(prev => [event, ...prev].slice(0, 10)); // Keep last 10 events
+      console.log('Received handshake event:', event);
+      setRecentEvents(prev => {
+        const newEvents = [event, ...prev].slice(0, 10);
+        console.log('Updated recent events:', newEvents);
+        return newEvents;
+      });
     });
 
     const unsubscribeUsers = handshakeService.onActiveUsersUpdate((users) => {
@@ -535,6 +556,9 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
 
               <div className="active-users-section">
                 <h3>Who's Shaking Hands Right Now</h3>
+                <button onClick={() => console.log('Manual check:', getRecentlyActiveUsers())} style={{marginBottom: '10px'}}>
+                  Debug: Check Active Users
+                </button>
                 <div className="active-users">
                   {getRecentlyActiveUsers().length === 0 ? (
                     <p className="no-users">No one is currently shaking hands</p>
