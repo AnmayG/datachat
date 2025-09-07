@@ -99,7 +99,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, connectedWallet, peraWal
           <header className="login-header">
             <div className="modal-header-row">
               <div className="logo">
-                <h1>DataChat</h1>
+                <h1>ShakeOnIt</h1>
               </div>
               {onClose && (
                 <button

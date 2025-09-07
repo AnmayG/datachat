@@ -83,10 +83,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin: appOnLogin, connecte
 
         <div className="x-right">
           <div className="x-content">
-            <h1 className="x-title">DataChat</h1>
+            <h1 className="x-title">ShakeOnIt</h1>
             <h2 className="x-subtitle">
-              The World's First Quantum Secure AI Web3 Blockchain IoT Digital
-              Identity Social Graph
+              Shake your hands. We'll boast for you.
             </h2>
             <div className="x-auth-buttons">
               <div className="x-main-buttons">
@@ -101,7 +100,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin: appOnLogin, connecte
               </div>
 
               <p className="x-terms">
-                Connect your Algorand wallet to get started with DataChat.
+                Connect your Algorand wallet to get started with ShakeOnIt.
               </p>
             </div>
           </div>
