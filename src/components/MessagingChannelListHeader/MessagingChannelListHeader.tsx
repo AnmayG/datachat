@@ -1,7 +1,8 @@
 import React from 'react';
 import { Avatar, useChatContext } from 'stream-chat-react';
+import { useNavigate } from 'react-router-dom';
 
-import { CreateChannelIcon } from '../../assets';
+import { CreateChannelIcon, HandshakeIcon } from '../../assets';
 import streamLogo from '../../assets/ProfilePic_LogoMark_GrdntOnWt.png';
 import { ThemeToggle } from '../ThemeToggle';
 
@@ -11,6 +12,7 @@ type Props = {
 
 const MessagingChannelListHeader = React.memo((props: Props) => {
   const { onCreateChannel } = props;
+  const navigate = useNavigate();
 
   const { client } = useChatContext();
 
@@ -24,7 +26,15 @@ const MessagingChannelListHeader = React.memo((props: Props) => {
           <ThemeToggle />
           <button
             className={`messaging__channel-list__header__button`}
+            onClick={() => navigate('/handshake')}
+            title="Handshake Detection"
+          >
+            <HandshakeIcon />
+          </button>
+          <button
+            className={`messaging__channel-list__header__button`}
             onClick={onCreateChannel}
+            title="Create Channel"
           >
             <CreateChannelIcon />
           </button>

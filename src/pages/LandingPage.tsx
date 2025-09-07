@@ -29,6 +29,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin: appOnLogin, connecte
     } else {
       setModalAnimationClass("");
     }
+    return () => {
+      // No cleanup needed in else case
+    };
   }, [showLoginModal]);
 
   const handleLogin = (userInfo: UserInfo) => {

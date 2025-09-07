@@ -24,7 +24,7 @@ import {
   SendButton,
 } from './components';
 
-import { LandingPage, OnboardingPage } from './pages';
+import { LandingPage, OnboardingPage, HandshakePage } from './pages';
 
 import { useThemeContext } from './context';
 
@@ -144,58 +144,61 @@ const AppContent = (props: AppProps) => {
 
   // Reconnect to wallet session on app load and authenticate
   useEffect(() => {
-    peraWallet.reconnectSession().then(async (accounts) => {
-      if (accounts.length) {
-        setConnectedWallet(accounts[0]);
-        // Setup disconnect listener
-        peraWallet.connector?.on("disconnect", () => {
-          setConnectedWallet(null);
-          setAuthState({
-            isAuthenticated: false,
-            hasCompletedOnboarding: false,
-            user: null,
-            token: undefined,
-            streamToken: undefined
+    // Only run this effect if not already authenticated
+    if (!authState.isAuthenticated) {
+      peraWallet.reconnectSession().then(async (accounts) => {
+        if (accounts.length) {
+          setConnectedWallet(accounts[0]);
+          // Setup disconnect listener
+          peraWallet.connector?.on("disconnect", () => {
+            setConnectedWallet(null);
+            setAuthState({
+              isAuthenticated: false,
+              hasCompletedOnboarding: false,
+              user: null,
+              token: undefined,
+              streamToken: undefined
+            });
           });
-        });
 
-        // Automatically authenticate with backend when wallet is connected
-        try {
-          let authResponse;
+          // Automatically authenticate with backend when wallet is connected
           try {
-            authResponse = await authService.login({
-              wallet_address: accounts[0]
+            let authResponse;
+            try {
+              authResponse = await authService.login({
+                wallet_address: accounts[0]
+              });
+            } catch (loginError) {
+              // If login fails, try to register
+              authResponse = await authService.register({
+                wallet_address: accounts[0]
+              });
+            }
+
+            // Set auth state
+            setAuthState({
+              isAuthenticated: true,
+              hasCompletedOnboarding: true,
+              user: {
+                id: authResponse.user.id,
+                name: authResponse.user.name,
+                image: authResponse.user.profile_pic_url
+              },
+              token: authResponse.token,
+              streamToken: authResponse.stream_token
             });
-          } catch (loginError) {
-            // If login fails, try to register
-            authResponse = await authService.register({
-              wallet_address: accounts[0]
-            });
+
+            // Navigate to chat on successful authentication
+            navigate('/chat');
+          } catch (error) {
+            console.error('Auto-authentication failed:', error);
           }
-
-          // Set auth state
-          setAuthState({
-            isAuthenticated: true,
-            hasCompletedOnboarding: true,
-            user: {
-              id: authResponse.user.id,
-              name: authResponse.user.name,
-              image: authResponse.user.profile_pic_url
-            },
-            token: authResponse.token,
-            streamToken: authResponse.stream_token
-          });
-
-          // Navigate to chat automatically
-          navigate('/chat');
-        } catch (error) {
-          console.error('Auto-authentication failed:', error);
         }
-      }
-    }).catch(error => {
-      console.log('Wallet reconnect error:', error);
-    });
-  }, [navigate]);
+      }).catch(error => {
+        console.log('Wallet reconnect error:', error);
+      });
+    }
+  }, [authState.isAuthenticated, navigate]);
 
   const handleLogin = (userInfo: UserInfo) => {
     setAuthState({
@@ -250,6 +253,14 @@ const AppContent = (props: AppProps) => {
               userToConnect={authState.user || props.userToConnect}
               userToken={authState.streamToken || props.userToken}
             />
+        } 
+      />
+      <Route 
+        path="/handshake" 
+        element={
+          !authState.isAuthenticated ? 
+            <Navigate to="/login" replace /> : 
+            <HandshakePage />
         } 
       />
       <Route path="*" element={<Navigate to="/" replace />} />

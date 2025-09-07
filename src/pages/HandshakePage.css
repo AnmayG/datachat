@@ -1,0 +1,386 @@
+.handshake-page {
+  min-height: 100vh;
+  background: var(--str-chat__background-color);
+  padding: 20px;
+}
+
+.handshake-container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--str-chat__secondary-background-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px var(--app-shadow-subtle);
+  overflow: hidden;
+}
+
+.handshake-header {
+  padding: 24px;
+  background: var(--str-chat__primary-color, #007AFF);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.handshake-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.handshake-content {
+  padding: 32px;
+}
+
+.permission-section {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.permission-section h2 {
+  margin: 0 0 16px 0;
+  color: var(--app-color-black);
+}
+
+.str-chat.str-chat__theme-dark .permission-section h2 {
+  color: var(--app-color-white);
+}
+
+.permission-section p {
+  margin: 0 0 24px 0;
+  color: var(--app-text-muted);
+  line-height: 1.5;
+}
+
+.permission-section.error {
+  color: var(--app-color-red, #FF3B30);
+}
+
+.permission-section.error h2 {
+  color: var(--app-color-red, #FF3B30);
+}
+
+.detection-section {
+  margin-bottom: 32px;
+}
+
+.status-display {
+  text-align: center;
+  padding: 40px 20px;
+  margin-bottom: 32px;
+}
+
+.handshake-success {
+  animation: successPulse 0.6s ease-in-out;
+}
+
+.success-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: bounce 0.8s ease-in-out;
+}
+
+.detecting-state .pulse-animation {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.ready-state .ready-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.status-display h2 {
+  margin: 0 0 8px 0;
+  color: var(--app-color-black);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.str-chat.str-chat__theme-dark .status-display h2 {
+  color: var(--app-color-white);
+}
+
+.status-display p {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 16px;
+}
+
+.control-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.btn-primary {
+  background: var(--str-chat__primary-color, #007AFF);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--str-chat__primary-color-hover, #0056CC);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--app-color-red, #FF3B30);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: var(--app-color-red-hover, #D70015);
+  transform: translateY(-1px);
+}
+
+.btn-large {
+  padding: 16px 32px;
+  font-size: 18px;
+  min-width: 160px;
+}
+
+.data-section {
+  border-top: 1px solid var(--app-border-light);
+  padding-top: 24px;
+}
+
+.str-chat.str-chat__theme-dark .data-section {
+  border-top-color: var(--app-border-dark);
+}
+
+.data-section h3 {
+  margin: 0 0 16px 0;
+  color: var(--app-color-black);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.str-chat.str-chat__theme-dark .data-section h3 {
+  color: var(--app-color-white);
+}
+
+.sensor-readings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.magnitude-display {
+  padding: 12px;
+  background: var(--app-surface-light);
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+}
+
+.str-chat.str-chat__theme-dark .magnitude-display {
+  background: var(--str-chat__secondary-surface-color);
+  color: var(--app-color-white);
+}
+
+.magnitude-display span.threshold-exceeded {
+  color: var(--app-color-orange, #FF9500);
+  font-weight: bold;
+}
+
+.magnitude-display small {
+  color: var(--app-text-muted);
+  font-size: 12px;
+}
+
+.latest-reading {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+}
+
+.latest-reading div {
+  padding: 8px;
+  background: var(--app-surface-light);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.str-chat.str-chat__theme-dark .latest-reading div {
+  background: var(--str-chat__secondary-surface-color);
+  color: var(--app-color-white);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Mobile responsiveness */
+@media screen and (max-width: 640px) {
+  .handshake-page {
+    padding: 16px;
+  }
+  
+  .handshake-content {
+    padding: 24px 20px;
+  }
+  
+  .handshake-header {
+    padding: 20px;
+  }
+  
+  .handshake-header h1 {
+    font-size: 20px;
+  }
+  
+  .status-display {
+    padding: 32px 16px;
+  }
+  
+  .latest-reading {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .btn-large {
+    padding: 14px 24px;
+    font-size: 16px;
+    min-width: 140px;
+  }
+}
+
+/* Progress bar for handshake detection */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: var(--str-chat__border-color);
+  border-radius: 4px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Handshaking state styling */
+.handshaking-state {
+  text-align: center;
+  color: var(--str-chat__text-color);
+}
+
+.handshaking-state h2 {
+  color: #FF9800;
+  margin-bottom: 8px;
+}
+
+.handshaking-state p {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+/* Peak count display */
+.peak-count {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: var(--str-chat__secondary-background-color);
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.peak-count small {
+  color: var(--str-chat__text-color-secondary);
+  font-weight: 500;
+}
+
+/* Enhanced pulse animation for handshaking */
+.handshaking-state .pulse-animation {
+  animation: handshakePulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes handshakePulse {
+  0% {
+    transform: scale(1) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1.1) rotate(5deg);
+  }
+}
+
+/* Control info styling */
+.control-info {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.detection-status {
+  font-size: 16px;
+  color: var(--str-chat__text-color);
+  margin: 0;
+  padding: 12px 20px;
+  background: var(--str-chat__secondary-background-color);
+  border-radius: 20px;
+  display: inline-block;
+  border: 2px solid #4CAF50;
+}
