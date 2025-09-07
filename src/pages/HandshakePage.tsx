@@ -19,9 +19,14 @@ interface HandshakeEvent {
   type: 'wave' | 'high_five' | 'fist_bump' | 'peace' | 'thumbs_up' | 'detected';
   from_uid: string;
   from_name: string;
+  from_wallet_address?: string; // Add wallet address to the event
   to_uid?: string;
   message?: string;
   timestamp: number;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 interface HandshakePageProps {
@@ -105,6 +110,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
       .map(event => ({
         uid: event.from_uid,
         name: event.from_name,
+        wallet_address: event.from_wallet_address, // Include wallet address
         handshake_type: event.type,
         timestamp: event.timestamp
       }))
@@ -114,7 +120,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
           acc[user.uid] = user;
         }
         return acc;
-      }, {} as Record<string, { uid: string; name: string; handshake_type: string; timestamp: number }>);
+      }, {} as Record<string, { uid: string; name: string; wallet_address?: string; handshake_type: string; timestamp: number }>);
     
     const result = Object.values(recentSenders);
     console.log('👥 Recent active users result:', result);
@@ -441,7 +447,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
   useEffect(() => {
     if (handshakeDetected && isConnectedToHandshake) {
       console.log('🤝 Sending detected handshake event (motion-based)');
-      handshakeService.sendHandshake('detected', undefined, `Motion detected with ${peakCount} peaks`)
+      handshakeService.sendHandshake('detected', undefined, `Motion detected with ${peakCount} peaks`, undefined, connectedWallet || undefined)
         .then((result) => {
           console.log('✅ Handshake event sent successfully:', result);
         })
@@ -449,7 +455,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
           console.error('❌ Failed to send handshake event:', error);
         });
     }
-  }, [handshakeDetected, isConnectedToHandshake, peakCount]);
+  }, [handshakeDetected, isConnectedToHandshake, peakCount, connectedWallet]);
 
   // Manual handshake sending
   const sendManualHandshake = async () => {
@@ -460,7 +466,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
 
     console.log('📤 Sending manual handshake...');
     try {
-      const result = await handshakeService.sendHandshake('detected', undefined, 'Manual handshake');
+      const result = await handshakeService.sendHandshake('detected', undefined, 'Manual handshake', undefined, connectedWallet || undefined);
       console.log('✅ Sent manual handshake successfully:', result);
     } catch (error) {
       console.error('❌ Failed to send manual handshake:', error);
@@ -845,7 +851,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
         if (otherUsers.length > 0) {
           console.log('👥 Other users detected shaking:', {
             count: otherUsers.length,
-            users: otherUsers.map(u => ({ uid: u.uid, name: u.name }))
+            users: otherUsers.map(u => ({ uid: u.uid, name: u.name, wallet_address: u.wallet_address }))
           });
           
           // For simplicity, send transaction to the first other user found
@@ -854,27 +860,14 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
           
           console.log('🎯 Target user for blockchain transaction:', {
             uid: targetUser.uid,
-            name: targetUser.name
+            name: targetUser.name,
+            wallet_address: targetUser.wallet_address
           });
           
-          // Try to extract wallet address from user ID (if it's an Algorand address)
-          let targetWalletAddress = null;
+          // Use the wallet address from the handshake event
+          const targetWalletAddress = targetUser.wallet_address;
           
-          // Check if the user ID looks like an Algorand address (58 characters, starts with uppercase letter)
-          if (targetUser.uid.length === 58 && /^[A-Z2-7]/.test(targetUser.uid)) {
-            targetWalletAddress = targetUser.uid;
-            console.log('📍 Found wallet address in user ID:', targetWalletAddress);
-          } else {
-            // For demo purposes, let's use a test address if the user ID indicates it's a test user
-            // In production, you'd want a proper user-to-wallet mapping system
-            if (targetUser.uid.includes('test') || targetUser.uid.includes('demo')) {
-              // Use a test wallet address - replace with your test address
-              targetWalletAddress = 'TESTNET_ADDRESS_PLACEHOLDER'; // Replace with actual test address
-              console.log('🧪 Using test wallet address for demo user');
-            }
-          }
-          
-          if (targetWalletAddress && targetWalletAddress !== 'TESTNET_ADDRESS_PLACEHOLDER') {
+          if (targetWalletAddress && targetWalletAddress !== connectedWallet) {
             console.log('🚀 ===== BLOCKCHAIN TRANSACTION CONDITIONS MET =====');
             console.log('✅ All requirements satisfied:', {
               multipleUsersShaking: true,
@@ -889,12 +882,13 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
           } else {
             console.log('⚠️ ===== BLOCKCHAIN TRANSACTION BLOCKED =====');
             console.log('❌ Missing requirements:', {
-              reason: targetWalletAddress === 'TESTNET_ADDRESS_PLACEHOLDER' ? 'Test placeholder address' : 'No wallet address found',
+              reason: !targetWalletAddress ? 'No wallet address in handshake event' : 'Cannot send transaction to self',
               targetUserUid: targetUser.uid,
               targetUserName: targetUser.name,
-              solution: 'User needs to have wallet address associated with their profile'
+              targetWalletAddress: targetWalletAddress,
+              connectedWallet: connectedWallet,
+              solution: targetWalletAddress ? 'Cannot send blockchain transaction to yourself' : 'Other user needs to have wallet connected when shaking'
             });
-            console.log('💡 For blockchain transactions to work, users need to have their wallet addresses associated with their profiles.');
           }
         }
       } else {

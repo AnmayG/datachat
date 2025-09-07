@@ -3,6 +3,7 @@ interface HandshakeEvent {
   type: 'wave' | 'high_five' | 'fist_bump' | 'peace' | 'thumbs_up' | 'detected';
   from_uid: string;
   from_name: string;
+  from_wallet_address?: string; // Add wallet address to the event
   to_uid?: string;
   message?: string;
   timestamp: number;
@@ -105,7 +106,7 @@ export class HandshakeService {
   }
 
   // Send handshake event
-  async sendHandshake(type: HandshakeEvent['type'], targetUserId?: string, message?: string, location?: { latitude: number; longitude: number }): Promise<HandshakeResponse> {
+  async sendHandshake(type: HandshakeEvent['type'], targetUserId?: string, message?: string, location?: { latitude: number; longitude: number }, walletAddress?: string): Promise<HandshakeResponse> {
     if (!this.userId) {
       throw new Error('Must be connected to send handshake');
     }
@@ -114,7 +115,8 @@ export class HandshakeService {
       type,
       to_uid: targetUserId,
       message,
-      location
+      location,
+      from_wallet_address: walletAddress // Include wallet address in payload
     };
 
     try {
