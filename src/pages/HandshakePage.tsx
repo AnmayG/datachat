@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useThemeContext } from '../context';
+import { handshakeService } from '../services/handshakeService';
 import './HandshakePage.css';
 
 interface AccelerometerData {
@@ -11,11 +12,29 @@ interface AccelerometerData {
   magnitude: number;
 }
 
-interface HandshakePageProps {
-  // Add any props if needed
+interface HandshakeEvent {
+  id: string;
+  type: 'wave' | 'high_five' | 'fist_bump' | 'peace' | 'thumbs_up' | 'detected';
+  from_uid: string;
+  from_name: string;
+  to_uid?: string;
+  message?: string;
+  timestamp: number;
 }
 
-const HandshakePage: React.FC<HandshakePageProps> = () => {
+interface ActiveUser {
+  uid: string;
+  name: string;
+  last_seen: number;
+  is_shaking: boolean;
+  handshake_type?: string;
+}
+
+interface HandshakePageProps {
+  user?: { id: string; name?: string; image?: string } | null;
+}
+
+const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
   const { themeClassName } = useThemeContext();
   const navigate = useNavigate();
   
@@ -36,6 +55,11 @@ const HandshakePage: React.FC<HandshakePageProps> = () => {
   const [magnitude, setMagnitude] = useState(0);
   const [peakCount, setPeakCount] = useState(0);
   const [isHandshaking, setIsHandshaking] = useState(false);
+
+  // Handshake events state
+  const [isConnectedToHandshake, setIsConnectedToHandshake] = useState(false);
+  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
+  const [recentEvents, setRecentEvents] = useState<HandshakeEvent[]>([]);
   
   const dataBufferRef = useRef<AccelerometerData[]>([]);
   const lastPeakTimeRef = useRef(0);
@@ -273,6 +297,101 @@ const HandshakePage: React.FC<HandshakePageProps> = () => {
     };
   }, []);
 
+  // Connect to handshake service
+  useEffect(() => {
+    // Use actual user data if available, otherwise fallback to generated values
+    const userId = user?.id || 'user-' + Math.random().toString(36).substr(2, 9);
+    const userName = user?.name || 'Anonymous User';
+    
+    // Connect to handshake service
+    handshakeService.connect(userId, userName)
+      .then(() => {
+        setIsConnectedToHandshake(true);
+        console.log('Connected to handshake service as:', userName);
+        
+        // Load initial active users
+        handshakeService.getActiveUsers().catch(console.error);
+      })
+      .catch((error) => {
+        console.error('Failed to connect to handshake service:', error);
+        setIsConnectedToHandshake(false);
+      });
+
+    // Set up event listeners
+    const unsubscribeEvents = handshakeService.onHandshakeEvent((event) => {
+      setRecentEvents(prev => [event, ...prev].slice(0, 10)); // Keep last 10 events
+    });
+
+    const unsubscribeUsers = handshakeService.onActiveUsersUpdate((users) => {
+      setActiveUsers(users);
+    });
+
+    const unsubscribeConnection = handshakeService.onConnectionChange((connected) => {
+      setIsConnectedToHandshake(connected);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      unsubscribeEvents();
+      unsubscribeUsers();
+      unsubscribeConnection();
+      handshakeService.disconnect();
+    };
+  }, [user]);
+
+  // Periodically refresh active users
+  useEffect(() => {
+    if (!isConnectedToHandshake) return;
+
+    const interval = setInterval(() => {
+      handshakeService.getActiveUsers().catch(console.error);
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [isConnectedToHandshake]);
+
+  // Send handshake event when motion handshake is detected
+  useEffect(() => {
+    if (handshakeDetected && isConnectedToHandshake) {
+      console.log('Sending detected handshake event');
+      handshakeService.sendHandshake('detected', undefined, `Motion detected with ${peakCount} peaks`)
+        .then(() => {
+          console.log('Handshake event sent successfully');
+        })
+        .catch((error) => {
+          console.error('Failed to send handshake event:', error);
+        });
+    }
+  }, [handshakeDetected, isConnectedToHandshake, peakCount]);
+
+  // Manual handshake sending
+  const sendManualHandshake = async () => {
+    if (!isConnectedToHandshake) {
+      console.error('Not connected to handshake service');
+      return;
+    }
+
+    try {
+      await handshakeService.sendHandshake('detected', undefined, 'Manual handshake');
+      console.log('Sent manual handshake');
+    } catch (error) {
+      console.error('Failed to send manual handshake:', error);
+    }
+  };
+
+  // Get handshake type emoji
+  const getHandshakeEmoji = (type: string) => {
+    switch (type) {
+      case 'wave': return '👋';
+      case 'high_five': return '🙏';
+      case 'fist_bump': return '👊';
+      case 'peace': return '✌️';
+      case 'thumbs_up': return '👍';
+      case 'detected': return '🤝';
+      default: return '👋';
+    }
+  };
+
   return (
     <div className={`handshake-page ${themeClassName}`}>
       <div className="handshake-container">
@@ -368,6 +487,73 @@ const HandshakePage: React.FC<HandshakePageProps> = () => {
                       <div><strong>Y:</strong> {accelerometerData[accelerometerData.length - 1]?.y.toFixed(2)}</div>
                       <div><strong>Z:</strong> {accelerometerData[accelerometerData.length - 1]?.z.toFixed(2)}</div>
                     </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="handshake-events-section">
+                <h3>Manual Handshake</h3>
+                <div className="manual-handshake">
+                  <div className="handshake-action">
+                    <button 
+                      onClick={sendManualHandshake}
+                      className="btn btn-primary btn-large"
+                      disabled={!isConnectedToHandshake}
+                    >
+                      🤝 Send Handshake
+                    </button>
+                  </div>
+                  <p className="connection-status">
+                    {isConnectedToHandshake ? '🟢 Connected to handshake service' : '🔴 Disconnected from handshake service'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="active-users-section">
+                <h3>Who's Shaking Hands Right Now</h3>
+                <div className="active-users">
+                  {activeUsers.length === 0 ? (
+                    <p className="no-users">No one is currently shaking hands</p>
+                  ) : (
+                    <div className="users-grid">
+                      {activeUsers.map((user) => (
+                        <div key={user.uid} className={`user-card ${user.is_shaking ? 'shaking' : ''}`}>
+                          <div className="user-avatar">
+                            {user.is_shaking ? getHandshakeEmoji(user.handshake_type || 'wave') : '👤'}
+                          </div>
+                          <div className="user-info">
+                            <div className="user-name">{user.name}</div>
+                            <div className="user-status">
+                              {user.is_shaking ? `Shaking: ${user.handshake_type || 'unknown'}` : 'Online'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="recent-events-section">
+                <h3>Recent Handshake Events</h3>
+                <div className="events-list">
+                  {recentEvents.length === 0 ? (
+                    <p className="no-events">No recent handshake events</p>
+                  ) : (
+                    recentEvents.map((event) => (
+                      <div key={event.id} className="event-item">
+                        <div className="event-emoji">{getHandshakeEmoji(event.type)}</div>
+                        <div className="event-details">
+                          <div className="event-text">
+                            <strong>{event.from_name}</strong> sent a {event.type}
+                            {event.message && <span className="event-message">: "{event.message}"</span>}
+                          </div>
+                          <div className="event-time">
+                            {new Date(event.timestamp).toLocaleTimeString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
               </div>
