@@ -183,7 +183,6 @@ const AppContent = (props: AppProps) => {
             });
           });
 
-<<<<<<< HEAD
         // Automatically authenticate with backend when wallet is connected
         // try {
         //   let authResponse;
@@ -221,46 +220,6 @@ const AppContent = (props: AppProps) => {
       console.log('Wallet reconnect error:', error);
     });
   }, [navigate]);
-=======
-          // Automatically authenticate with backend when wallet is connected
-          try {
-            let authResponse;
-            try {
-              authResponse = await authService.login({
-                wallet_address: accounts[0]
-              });
-            } catch (loginError) {
-              // If login fails, try to register
-              authResponse = await authService.register({
-                wallet_address: accounts[0]
-              });
-            }
-
-            // Set auth state
-            setAuthState({
-              isAuthenticated: true,
-              hasCompletedOnboarding: true,
-              user: {
-                id: authResponse.user.id,
-                name: authResponse.user.name,
-                image: authResponse.user.profile_pic_url
-              },
-              token: authResponse.token,
-              streamToken: authResponse.stream_token
-            });
-
-            // Navigate to chat on successful authentication
-            navigate('/chat');
-          } catch (error) {
-            console.error('Auto-authentication failed:', error);
-          }
-        }
-      }).catch(error => {
-        console.log('Wallet reconnect error:', error);
-      });
-    }
-  }, [authState.isAuthenticated, navigate]);
->>>>>>> 0622fbd93031bd2ad0a5c3703d086adae55efb0b
 
   const handleLogin = (userInfo: UserInfo) => {
     setAuthState({
