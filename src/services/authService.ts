@@ -30,7 +30,10 @@ interface RegisterRequest {
 export class AuthService {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'https://api-datachat.loca.lt') {
+  // constructor(baseUrl: string = 'https://api-datachat.loca.lt') {
+  //   this.baseUrl = baseUrl;
+  // }
+  constructor(baseUrl: string = 'https://tucson-mar-single-foul.trycloudflare.com') {
     this.baseUrl = baseUrl;
   }
 

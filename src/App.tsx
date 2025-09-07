@@ -1,34 +1,16 @@
 import {useEffect, useState} from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import type { ChannelFilters, ChannelOptions, ChannelSort, TextComposerMiddleware } from 'stream-chat';
-import {
-  Channel,
-  Chat,
-  ChatView,
-  useCreateChatClient,
-} from 'stream-chat-react';
-import clsx from 'clsx';
-import { createTextComposerEmojiMiddleware, EmojiPicker } from 'stream-chat-react/emojis';
+import type { ChannelFilters, ChannelOptions, ChannelSort } from 'stream-chat';
 import { PeraWalletConnect } from '@perawallet/connect';
 
 import data from '@emoji-mart/data';
-import { init, SearchIndex } from 'emoji-mart';
+import { init } from 'emoji-mart';
 
-import 'stream-chat-react/dist/css/v2/index.css';
 import './styles/index.css';
 
-import {
-  ChannelInner,
-  CreateChannel,
-  MessagingSidebar,
-  SendButton,
-} from './components';
+import { LandingPage, OnboardingPage, HandshakePage, ChatPage } from './pages';
 
-import { LandingPage, OnboardingPage, HandshakePage } from './pages';
 
-import { useThemeContext } from './context';
-
-import { useChecklist, useMobileView, useUpdateAppHeightOnResize } from './hooks';
 import { authService } from './services/authService';
 import type { UserInfo, AuthState, OnboardingPreferences } from './types/auth';
 
@@ -53,83 +35,7 @@ type AppProps = {
 };
 
 
-const noop = () => null;
 
-const EmojiPickerWithTheme = () => {
-  const { theme } = useThemeContext();
-
-  return <EmojiPicker pickerProps={{ theme }} />;
-};
-
-const ChatApp = (props: AppProps) => {
-  const { apiKey, userToConnect, userToken, targetOrigin, channelListOptions } = props;
-  const [isCreating, setIsCreating] = useState(false);
-
-  const chatClient = useCreateChatClient({
-    apiKey,
-    userData: userToConnect,
-    tokenOrProvider: userToken,
-  });
-  const toggleMobile = useMobileView();
-  const { themeClassName } = useThemeContext();
-
-  useChecklist(chatClient, targetOrigin);
-  useUpdateAppHeightOnResize();
-
-  useEffect(() => {
-    if (!chatClient) return;
-
-    chatClient.setMessageComposerSetupFunction(({ composer }) => {
-      composer.textComposer.middlewareExecutor.insert({
-        middleware: [
-          createTextComposerEmojiMiddleware(SearchIndex) as TextComposerMiddleware,
-        ],
-        position: { before: 'stream-io/text-composer/mentions-middleware' },
-        unique: true,
-      });
-      composer.updateConfig({
-        linkPreviews: {enabled: true},
-      });
-    });
-  }, [chatClient]);
-
-  if (!chatClient) {
-    return null; // render nothing until connection to the backend is established
-  }
-
-  return (
-    <Chat client={chatClient} theme={clsx('messaging', themeClassName)}>
-      <ChatView>
-        {/* <ChatView.Selector /> */}
-        <ChatView.Channels>
-          <MessagingSidebar
-            channelListOptions={channelListOptions}
-            onClick={toggleMobile}
-            onCreateChannel={() => {
-              console.log('Create channel button clicked, isCreating:', !isCreating);
-              setIsCreating(!isCreating);
-            }}
-            onPreviewSelect={() => setIsCreating(false)}
-          />
-          {isCreating ? (
-            <div style={{ flex: 1, display: 'flex' }}>
-              <CreateChannel toggleMobile={toggleMobile} onClose={() => setIsCreating(false)} />
-            </div>
-          ) : (
-            <Channel
-              SendButton={SendButton}
-              TypingIndicator={noop}
-              EmojiPicker={EmojiPickerWithTheme}
-              emojiSearchIndex={SearchIndex}
-            >
-              <ChannelInner theme={themeClassName} toggleMobile={toggleMobile} />
-            </Channel>
-          )}
-        </ChatView.Channels>
-      </ChatView>
-    </Chat>
-  );
-};
 
 const AppContent = (props: AppProps) => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -159,6 +65,7 @@ const AppContent = (props: AppProps) => {
               token: undefined,
               streamToken: undefined
             });
+            navigate('/');
           });
 
           // Automatically authenticate with backend when wallet is connected
@@ -188,17 +95,18 @@ const AppContent = (props: AppProps) => {
               streamToken: authResponse.stream_token
             });
 
-            // Navigate to chat on successful authentication
+            // Navigate to chat automatically
             navigate('/chat');
           } catch (error) {
             console.error('Auto-authentication failed:', error);
+            // If auto-auth fails, stay on landing page for manual connection
           }
         }
       }).catch(error => {
         console.log('Wallet reconnect error:', error);
       });
     }
-  }, [authState.isAuthenticated, navigate]);
+  }, [navigate, authState.isAuthenticated]);
 
   const handleLogin = (userInfo: UserInfo) => {
     setAuthState({
@@ -248,7 +156,7 @@ const AppContent = (props: AppProps) => {
         element={
           !authState.isAuthenticated ? 
             <Navigate to="/login" replace /> : 
-            <ChatApp 
+            <ChatPage 
               {...props}
               userToConnect={authState.user || props.userToConnect}
               userToken={authState.streamToken || props.userToken}

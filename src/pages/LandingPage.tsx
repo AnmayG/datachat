@@ -28,10 +28,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin: appOnLogin, connecte
       return () => clearTimeout(timer);
     } else {
       setModalAnimationClass("");
+      return () => {}; // Return empty cleanup function
     }
-    return () => {
-      // No cleanup needed in else case
-    };
   }, [showLoginModal]);
 
   const handleLogin = (userInfo: UserInfo) => {
@@ -42,8 +40,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin: appOnLogin, connecte
     }
     
     setShowLoginModal(false);
-    // Handle login success - could navigate to onboarding or chat
-    navigate("/onboarding");
+    // Handle login success - navigate to chat since onboarding is completed during authentication
+    navigate("/chat");
   };
 
   return (
