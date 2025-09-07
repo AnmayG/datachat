@@ -39,7 +39,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
   const [lastHandshakePartner, setLastHandshakePartner] = useState<string | null>(null);
   
   // App configuration - you may want to make this configurable
-  const APP_ID = 123456; // Replace with your actual deployed app ID
+  const APP_ID = 745502313; // Replace with your actual deployed app ID
   const algodClient = useMemo(() => new algosdk.Algodv2('', 'https://testnet-api.algonode.cloud', ''), []);
   
   // Detection algorithm parameters
@@ -64,10 +64,24 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
   const [isConnectedToHandshake, setIsConnectedToHandshake] = useState(false);
   const [recentEvents, setRecentEvents] = useState<HandshakeEvent[]>([]);
   
+  // Manual request state
+  const [targetUserId, setTargetUserId] = useState('');
+  const [manualRequestPending, setManualRequestPending] = useState(false);
+  
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  
   // Track users who have shaken hands recently (last 10 seconds)
   const getRecentlyActiveUsers = useCallback(() => {
     const now = Date.now();
     const recentThreshold = 10000; // 10 seconds
+    
+    console.log('📊 Getting recent active users...', {
+      totalEvents: recentEvents.length,
+      now: now,
+      recentThreshold: recentThreshold
+    });
     
     const recentSenders = recentEvents
       .filter(event => {
@@ -78,6 +92,14 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
         }
         
         const isRecent = now - eventTime < recentThreshold;
+        console.log('📅 Event time check:', {
+          eventFromUid: event.from_uid,
+          eventTimestamp: event.timestamp,
+          eventTimeConverted: eventTime,
+          isRecent: isRecent,
+          ageMs: now - eventTime
+        });
+        
         return isRecent;
       })
       .map(event => ({
@@ -95,6 +117,7 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
       }, {} as Record<string, { uid: string; name: string; handshake_type: string; timestamp: number }>);
     
     const result = Object.values(recentSenders);
+    console.log('👥 Recent active users result:', result);
     return result;
   }, [recentEvents]);
   
@@ -378,8 +401,12 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
 
     // Set up event listeners
     const unsubscribeEvents = handshakeService.onHandshakeEvent((event) => {
-      console.log('Received handshake event:', event);
-      setRecentEvents(prev => [event, ...prev].slice(0, 10)); // Keep last 10 events
+      console.log('🎯 Received handshake event:', event);
+      setRecentEvents(prev => {
+        const newEvents = [event, ...prev].slice(0, 10); // Keep last 10 events
+        console.log('📝 Updated recent events:', newEvents);
+        return newEvents;
+      });
     });
 
     const unsubscribeUsers = handshakeService.onActiveUsersUpdate(() => {
@@ -413,13 +440,13 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
   // Send handshake event when motion handshake is detected
   useEffect(() => {
     if (handshakeDetected && isConnectedToHandshake) {
-      console.log('Sending detected handshake event');
+      console.log('🤝 Sending detected handshake event (motion-based)');
       handshakeService.sendHandshake('detected', undefined, `Motion detected with ${peakCount} peaks`)
-        .then(() => {
-          console.log('Handshake event sent successfully');
+        .then((result) => {
+          console.log('✅ Handshake event sent successfully:', result);
         })
         .catch((error) => {
-          console.error('Failed to send handshake event:', error);
+          console.error('❌ Failed to send handshake event:', error);
         });
     }
   }, [handshakeDetected, isConnectedToHandshake, peakCount]);
@@ -427,46 +454,106 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
   // Manual handshake sending
   const sendManualHandshake = async () => {
     if (!isConnectedToHandshake) {
-      console.error('Not connected to handshake service');
+      console.error('❌ Not connected to handshake service');
       return;
     }
 
+    console.log('📤 Sending manual handshake...');
     try {
-      await handshakeService.sendHandshake('detected', undefined, 'Manual handshake');
-      console.log('Sent manual handshake');
+      const result = await handshakeService.sendHandshake('detected', undefined, 'Manual handshake');
+      console.log('✅ Sent manual handshake successfully:', result);
     } catch (error) {
-      console.error('Failed to send manual handshake:', error);
+      console.error('❌ Failed to send manual handshake:', error);
+    }
+  };
+
+  // Show toast notification
+  const showToastNotification = (message: string, duration: number = 5000) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, duration);
+  };
+
+  // Manual request to specific user
+  const sendManualRequest = async () => {
+    if (!targetUserId.trim()) {
+      alert('Please enter a user ID');
+      return;
+    }
+
+    if (!connectedWallet) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    setManualRequestPending(true);
+    console.log('📤 Sending manual blockchain request to user:', targetUserId);
+    
+    try {
+      // For now, we'll use the target user ID as the wallet address
+      // In a real app, you'd need to look up the wallet address for the user ID
+      await sendBlockchainHandshake(targetUserId);
+      console.log('✅ Manual blockchain request sent successfully');
+      setTargetUserId(''); // Clear the input
+    } catch (error) {
+      console.error('❌ Failed to send manual blockchain request:', error);
+      alert('Failed to send blockchain request. Check console for details.');
+    } finally {
+      setManualRequestPending(false);
     }
   };
 
   // Blockchain handshake function
   const sendBlockchainHandshake = useCallback(async (otherUserAddress: string) => {
+    console.log('🚀 ===== BLOCKCHAIN HANDSHAKE INITIATED =====');
+    console.log('🌐 Network: Algorand TESTNET');
+    console.log('🔗 Node: https://testnet-api.algonode.cloud');
+    console.log('📋 Transaction Details:', {
+      from: connectedWallet,
+      to: otherUserAddress,
+      appId: APP_ID,
+      network: 'testnet'
+    });
+
     if (!connectedWallet) {
-      console.log('No wallet connected for blockchain transaction');
+      console.log('❌ No wallet connected for blockchain transaction');
       return;
     }
 
     if (blockchainTxPending) {
-      console.log('Blockchain transaction already pending, skipping...');
+      console.log('⏳ Blockchain transaction already pending, skipping...');
       return;
     }
 
     if (lastHandshakePartner === otherUserAddress) {
-      console.log('Already sent blockchain handshake to this user recently');
+      console.log('🔄 Already sent blockchain handshake to this user recently');
+      return;
+    }
+
+    // Check for self-transaction (smart contract will reject this)
+    if (connectedWallet === otherUserAddress) {
+      console.log('🚫 Cannot send handshake to self - smart contract will reject this');
       return;
     }
 
     setBlockchainTxPending(true);
+    console.log('⏳ Setting blockchain transaction pending state...');
     
     try {
+      console.log('🎲 Generating random location hash...');
       // Generate a random location hash (32 bytes)
       const randomBytes = new Uint8Array(32);
       crypto.getRandomValues(randomBytes);
       const locationHash = Buffer.from(randomBytes).toString('base64');
+      console.log('📍 Location hash generated:', locationHash.substring(0, 20) + '...');
 
       // Convert location hash to bytes
       const locHashBytes = new Uint8Array(Buffer.from(locationHash, 'base64'));
+      console.log('🔢 Location hash bytes length:', locHashBytes.length);
 
+      console.log('📝 Creating ABI method interface...');
       // Create ABI method interface
       const abiMethod = new algosdk.ABIMethod({
         name: 'request_handshake',
@@ -476,16 +563,27 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
         ],
         returns: { type: 'bool' }
       });
+      console.log('✅ ABI method selector:', Array.from(abiMethod.getSelector()).map(b => b.toString(16).padStart(2, '0')).join(''));
 
+      console.log('🌐 Getting transaction parameters from Algorand network...');
       // Create application call transaction with ABI encoding
       const suggestedParams = await algodClient.getTransactionParams().do();
+      console.log('📊 Network parameters:', {
+        fee: suggestedParams.fee,
+        firstRound: suggestedParams.firstValid,
+        lastRound: suggestedParams.lastValid,
+        genesisId: suggestedParams.genesisID
+      });
       
+      console.log('🔗 Encoding byte array for smart contract...');
       // Combine length prefix and bytes for the byte[] argument
       const lengthBytes = algosdk.encodeUint64(locHashBytes.length);
       const combinedBytes = new Uint8Array(lengthBytes.length + locHashBytes.length);
       combinedBytes.set(lengthBytes, 0);
       combinedBytes.set(locHashBytes, lengthBytes.length);
+      console.log('📦 Combined bytes length:', combinedBytes.length);
       
+      console.log('🗃️ Creating box references for smart contract state...');
       // Create box references for the smart contract
       const connectedAccountPublicKey = algosdk.decodeAddress(connectedWallet).publicKey;
       const destinationPublicKey = algosdk.decodeAddress(otherUserAddress).publicKey;
@@ -509,6 +607,12 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
         }
       ];
       
+      console.log('📄 Box references created:', boxReferences.length, 'boxes');
+      boxReferences.forEach((box, index) => {
+        console.log(`   Box ${index + 1}: ${Array.from(box.name.slice(0, 10)).map(b => b.toString(16)).join('')}... (${box.name.length} bytes)`);
+      });
+
+      console.log('📋 Building application call transaction...');
       const appCallTxn = algosdk.makeApplicationCallTxnFromObject({
         sender: connectedWallet,
         suggestedParams,
@@ -522,40 +626,194 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
         boxes: boxReferences,
       });
 
-      console.log('Sending blockchain handshake transaction...');
+      console.log('📄 Transaction created:', {
+        txType: 'ApplicationCall',
+        sender: connectedWallet,
+        appIndex: APP_ID,
+        fee: suggestedParams.fee
+      });
+
+      console.log('🖊️ Sending transaction to Pera Wallet for signing...');
+
+      // Show toast notification for mobile wallet
+      showToastNotification('📱 Check your Pera Wallet mobile app to confirm the transaction!', 8000);
+      
+      // Log prominent message for mobile users
+      console.log('📱 ===== IMPORTANT: CHECK YOUR MOBILE WALLET =====');
+      console.log('👆 Please open your Pera Wallet mobile app to confirm the transaction');
+      console.log('⏰ The transaction is waiting for your approval...');
 
       // Sign with Pera Wallet
       const txnArray = [[{ txn: appCallTxn }]];
       const signedTxns = await peraWallet.signTransaction(txnArray);
+      
+      console.log('✅ Transaction signed by wallet');
+      console.log('📝 Signed transaction details:', {
+        length: signedTxns.length,
+        firstTxnSize: signedTxns[0]?.length || 0
+      });
 
+      console.log('📡 Submitting transaction to Algorand network...');
       // Submit transaction
       const txResponse = await algodClient.sendRawTransaction(signedTxns).do();
       const txId = txResponse.txid;
+      
+      console.log('🎯 ===== TRANSACTION SUBMITTED =====');
+      console.log('📄 Transaction Response:', txResponse);
+      console.log('🆔 Transaction ID:', txId);
+      console.log('🔗 Testnet Explorer URL: https://testnet.algoexplorer.io/tx/' + txId);
+      console.log('📊 Response details:', {
+        txId: txResponse.txid,
+        rawResponse: txResponse
+      });
+      
+      console.log('⏱️ Waiting for transaction confirmation...');
       const confirmedTxn = await algosdk.waitForConfirmation(algodClient, txId, 4);
       
-      console.log('🎉 Blockchain handshake completed! Transaction ID:', txId);
-      console.log('Block confirmed:', confirmedTxn.confirmedRound);
+      console.log('🎉 ===== TRANSACTION CONFIRMED =====');
+      console.log('📋 Full confirmation response:', confirmedTxn);
+      console.log('🏗️ Confirmed in block:', confirmedTxn.confirmedRound);
+      console.log('💎 Transaction ID:', txId);
+      console.log('🌐 Testnet Explorer: https://testnet.algoexplorer.io/tx/' + txId);
+      
+      // Detailed transaction information
+      if (confirmedTxn.txn) {
+        console.log('📝 Transaction details:', confirmedTxn.txn);
+        console.log('⛽ Fee paid:', confirmedTxn.txn.txn?.fee || 'Unknown', 'microAlgos');
+        console.log('🎯 Application ID called:', APP_ID);
+        console.log('👤 From address:', connectedWallet);
+      }
+      
+      // Application call results
+      if (confirmedTxn.applicationIndex !== undefined) {
+        console.log('📱 Application Index:', confirmedTxn.applicationIndex);
+      }
+      
+      // Global and local state changes
+      if (confirmedTxn.globalStateDelta) {
+        console.log('🌍 Global state changes:', confirmedTxn.globalStateDelta);
+      }
+      if (confirmedTxn.localStateDelta) {
+        console.log('🏠 Local state changes:', confirmedTxn.localStateDelta);
+      }
+      
+      // Transaction logs (smart contract output)
+      if (confirmedTxn.logs && confirmedTxn.logs.length > 0) {
+        console.log('📜 ===== SMART CONTRACT LOGS =====');
+        confirmedTxn.logs.forEach((log, index) => {
+          console.log(`📄 Log ${index + 1}:`, log);
+          try {
+            // Try to decode log as string - logs are already Uint8Arrays
+            const decoded = new TextDecoder().decode(log);
+            console.log(`📄 Log ${index + 1} (decoded):`, decoded);
+          } catch (e) {
+            console.log(`📄 Log ${index + 1} (raw bytes):`, Array.from(log));
+          }
+        });
+        
+        // Decode ABI return value from the last log (typically contains the return value)
+        if (confirmedTxn.logs.length > 0) {
+          try {
+            const lastLog = confirmedTxn.logs[confirmedTxn.logs.length - 1];
+            console.log('🔍 ===== ABI RETURN VALUE DECODING =====');
+            console.log('📄 Raw return value log:', lastLog);
+            console.log('📄 Raw return value bytes:', Array.from(lastLog));
+            
+            // Try ABI decoding first
+            try {
+              const abiReturnType = algosdk.ABIType.from('bool');
+              const decodedValue = abiReturnType.decode(lastLog);
+              console.log('✅ ===== SMART CONTRACT RETURN VALUE (ABI) =====');
+              console.log(`🎯 request_handshake() returned: ${decodedValue}`);
+              console.log(`📊 Return value type: boolean (ABI decoded)`);
+              
+              if (decodedValue) {
+                console.log('🎉 SUCCESS: Smart contract accepted the handshake request!');
+              } else {
+                console.log('⚠️ REJECTED: Smart contract rejected the handshake request');
+              }
+            } catch (abiError) {
+              console.log('⚠️ ABI decoding failed, trying manual decode...', abiError);
+              
+              // Fallback to manual boolean decoding
+              // For boolean return type, the value is typically in the first byte
+              // ABI encoding: 0x00 = false, 0x01 = true
+              if (lastLog.length > 0) {
+                const returnValue = lastLog[0] === 1;
+                console.log('✅ ===== SMART CONTRACT RETURN VALUE (MANUAL) =====');
+                console.log(`🎯 request_handshake() returned: ${returnValue}`);
+                console.log(`📊 Return value type: boolean (manual decode)`);
+                console.log(`📋 Raw byte value: 0x${lastLog[0].toString(16).padStart(2, '0')}`);
+                
+                if (returnValue) {
+                  console.log('🎉 SUCCESS: Smart contract accepted the handshake request!');
+                } else {
+                  console.log('⚠️ REJECTED: Smart contract rejected the handshake request');
+                }
+              } else {
+                console.log('❌ No return value data found in logs');
+              }
+            }
+          } catch (error) {
+            console.error('❌ Error decoding return value:', error);
+          }
+        }
+      } else {
+        console.log('📜 No logs returned from smart contract');
+        console.log('⚠️ No return value available - smart contract may not have returned data');
+      }
+      
+      // Inner transactions (if any)
+      if (confirmedTxn.innerTxns && confirmedTxn.innerTxns.length > 0) {
+        console.log('🔄 Inner transactions:', confirmedTxn.innerTxns);
+      }
+      
+      // Pool error (if any)
+      if (confirmedTxn.poolError) {
+        console.log('🚨 Pool error:', confirmedTxn.poolError);
+      }
+      
+      // Asset information (if relevant)
+      if (confirmedTxn.assetIndex) {
+        console.log('🪙 Asset index:', confirmedTxn.assetIndex);
+      }
+      
+      console.log('🎊 ===== BLOCKCHAIN HANDSHAKE SUCCESS =====');
+      
+      // Show success toast
+      showToastNotification('🎉 Blockchain handshake completed successfully!', 5000);
       
       setLastHandshakePartner(otherUserAddress);
+      console.log('🔒 Setting cooldown for user:', otherUserAddress.substring(0, 8) + '...');
       
       // Reset the partner after some time to allow future transactions
       setTimeout(() => {
         setLastHandshakePartner(null);
-      }, 30000); // 30 seconds cooldown
+        console.log('🔓 Cooldown expired, can send blockchain handshake again');
+      }, 10000); // 10 seconds cooldown
       
     } catch (error) {
-      console.error('Blockchain handshake failed:', error);
+      console.error('💥 ===== BLOCKCHAIN HANDSHAKE FAILED =====');
+      console.error('❌ Error details:', error);
+      
+      if (error instanceof Error) {
+        console.error('📋 Error message:', error.message);
+        console.error('🔍 Error stack:', error.stack);
+      }
       
       // Don't treat user cancellation as an error
       if (error instanceof Error && 
           (error.message.includes('Transaction signing was cancelled') || 
            error.message.includes('User rejected'))) {
-        console.log('User cancelled blockchain transaction');
+        console.log('👤 User cancelled blockchain transaction');
+        showToastNotification('❌ Transaction cancelled by user', 3000);
       } else {
-        console.error('Unexpected blockchain error:', error);
+        console.error('🚨 Unexpected blockchain error - this may indicate network issues or smart contract problems');
+        showToastNotification('❌ Blockchain transaction failed. Check console for details.', 5000);
       }
     } finally {
       setBlockchainTxPending(false);
+      console.log('🏁 Blockchain transaction process completed, clearing pending state');
     }
   }, [connectedWallet, blockchainTxPending, lastHandshakePartner, peraWallet, algodClient]);
 
@@ -563,16 +821,65 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
   useEffect(() => {
     const recentlyActiveUsers = getRecentlyActiveUsers();
     
+    console.log('🔍 Checking for blockchain opportunities...', {
+      recentlyActiveUsersCount: recentlyActiveUsers.length,
+      recentlyActiveUsers: recentlyActiveUsers,
+      currentUserId: user?.id,
+      connectedWallet: connectedWallet,
+      blockchainTxPending: blockchainTxPending
+    });
+    
     // If we have exactly 2 users (including ourselves) who are shaking hands
-    if (recentlyActiveUsers.length === 2 && user?.id) {
+    if (recentlyActiveUsers.length >= 2 && user?.id && connectedWallet) {
       const otherUser = recentlyActiveUsers.find(u => u.uid !== user.id);
       
       if (otherUser && !blockchainTxPending) {
-        console.log('Two users shaking hands detected, initiating blockchain transaction...');
-        sendBlockchainHandshake(otherUser.uid);
+        console.log('Two users shaking hands detected!', {
+          otherUserUid: otherUser.uid,
+          otherUserName: otherUser.name
+        });
+        
+        // Try to extract wallet address from user ID (if it's an Algorand address)
+        let otherWalletAddress = null;
+        
+        // Check if the user ID looks like an Algorand address (58 characters, starts with uppercase letter)
+        if (otherUser.uid.length === 58 && /^[A-Z2-7]/.test(otherUser.uid)) {
+          otherWalletAddress = otherUser.uid;
+          console.log('📍 Found wallet address in user ID:', otherWalletAddress);
+        } else {
+          // For demo purposes, let's use a test address if the user ID indicates it's a test user
+          // In production, you'd want a proper user-to-wallet mapping system
+          if (otherUser.uid.includes('test') || otherUser.uid.includes('demo')) {
+            // Use a test wallet address - replace with your test address
+            otherWalletAddress = 'TESTNET_ADDRESS_PLACEHOLDER'; // Replace with actual test address
+            console.log('🧪 Using test wallet address for demo user');
+          }
+        }
+        
+        if (otherWalletAddress && otherWalletAddress !== 'TESTNET_ADDRESS_PLACEHOLDER') {
+          console.log('🚀 ===== BLOCKCHAIN TRANSACTION CONDITIONS MET =====');
+          console.log('✅ All requirements satisfied:', {
+            twoUsersShaking: true,
+            connectedWallet: connectedWallet,
+            otherWalletFound: otherWalletAddress,
+            notPending: !blockchainTxPending,
+            notSelf: otherWalletAddress !== connectedWallet
+          });
+          console.log('🚀 Initiating blockchain transaction...');
+          sendBlockchainHandshake(otherWalletAddress);
+        } else {
+          console.log('⚠️ ===== BLOCKCHAIN TRANSACTION BLOCKED =====');
+          console.log('❌ Missing requirements:', {
+            reason: otherWalletAddress === 'TESTNET_ADDRESS_PLACEHOLDER' ? 'Test placeholder address' : 'No wallet address found',
+            otherUserUid: otherUser.uid,
+            otherUserName: otherUser.name,
+            solution: 'User needs to have wallet address associated with their profile'
+          });
+          console.log('💡 For blockchain transactions to work, users need to have their wallet addresses associated with their profiles.');
+        }
       }
     }
-  }, [recentEvents, blockchainTxPending, user?.id, getRecentlyActiveUsers, sendBlockchainHandshake]);
+  }, [recentEvents, blockchainTxPending, user?.id, connectedWallet, getRecentlyActiveUsers, sendBlockchainHandshake]);
 
   // Get handshake type emoji
   const getHandshakeEmoji = (type: string) => {
@@ -599,6 +906,21 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
           </button>
           <h1>Handshake Detection</h1>
         </header>
+
+        {/* Toast Notification */}
+        {showToast && (
+          <div className="toast-notification">
+            <div className="toast-content">
+              <span className="toast-message">{toastMessage}</span>
+              <button 
+                className="toast-close"
+                onClick={() => setShowToast(false)}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="handshake-content">
           {hasPermission === null && (
@@ -715,6 +1037,32 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user, peraWallet, connect
                       </p>
                     )}
                   </div>
+                </div>
+              </div>
+
+              <div className="manual-request-section">
+                <h3>Manual Blockchain Request</h3>
+                <div className="manual-request">
+                  <div className="request-input">
+                    <input
+                      type="text"
+                      placeholder="Enter user wallet address"
+                      value={targetUserId}
+                      onChange={(e) => setTargetUserId(e.target.value)}
+                      className="user-input"
+                      disabled={manualRequestPending}
+                    />
+                    <button 
+                      onClick={sendManualRequest}
+                      className="btn btn-secondary"
+                      disabled={!connectedWallet || manualRequestPending || !targetUserId.trim()}
+                    >
+                      {manualRequestPending ? '⏳ Sending...' : '🚀 Send Blockchain Request'}
+                    </button>
+                  </div>
+                  <p className="request-info">
+                    Send a blockchain transaction request to a specific wallet address.
+                  </p>
                 </div>
               </div>
 
