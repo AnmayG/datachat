@@ -1,0 +1,463 @@
+#pragma version 10
+#pragma typetrack false
+
+// smart_contracts.handshake.contract.HandshakeApp.__algopy_entrypoint_with_init() -> uint64:
+main:
+    intcblock 0 1 32
+    bytecblock 0x633a 0x0000 0x151f7c75 0x703a
+    // smart_contracts/handshake/contract.py:12
+    // class HandshakeApp(ARC4Contract):
+    txn NumAppArgs
+    bz main_bare_routing@7
+    pushbytess 0x6d6c31de 0xb43e0954 // method "request_handshake(address,byte[])bool", method "get_my_connections()address[]"
+    txna ApplicationArgs 0
+    match main_request_handshake_route@5 main_get_my_connections_route@6
+
+main_after_if_else@9:
+    // smart_contracts/handshake/contract.py:12
+    // class HandshakeApp(ARC4Contract):
+    intc_0 // 0
+    return
+
+main_get_my_connections_route@6:
+    // smart_contracts/handshake/contract.py:83
+    // @abimethod()
+    txn OnCompletion
+    !
+    assert // OnCompletion is not NoOp
+    txn ApplicationID
+    assert // can only call when not creating
+    callsub get_my_connections
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_request_handshake_route@5:
+    // smart_contracts/handshake/contract.py:37-38
+    // # -------- methods --------
+    // @abimethod()
+    txn OnCompletion
+    !
+    assert // OnCompletion is not NoOp
+    txn ApplicationID
+    assert // can only call when not creating
+    // smart_contracts/handshake/contract.py:12
+    // class HandshakeApp(ARC4Contract):
+    txna ApplicationArgs 1
+    txna ApplicationArgs 2
+    // smart_contracts/handshake/contract.py:37-38
+    // # -------- methods --------
+    // @abimethod()
+    callsub request_handshake
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bare_routing@7:
+    // smart_contracts/handshake/contract.py:12
+    // class HandshakeApp(ARC4Contract):
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn ApplicationID
+    !
+    assert // can only call when creating
+    intc_1 // 1
+    return
+
+
+// smart_contracts.handshake.contract.HandshakeApp._contains(arr: bytes, who: bytes) -> uint64, bytes:
+_contains:
+    // smart_contracts/handshake/contract.py:22-24
+    // # -------- helpers --------
+    // @subroutine
+    // def _contains(self, arr: DynamicArray[Address], who: Address) -> bool:
+    proto 2 2
+    // smart_contracts/handshake/contract.py:25
+    // i = UInt64(0)
+    intc_0 // 0
+    // smart_contracts/handshake/contract.py:26
+    // n = arr.length
+    frame_dig -2
+    intc_0 // 0
+    extract_uint16
+
+_contains_while_top@1:
+    // smart_contracts/handshake/contract.py:27
+    // while i < n:
+    frame_dig 0
+    frame_dig 1
+    <
+    bz _contains_after_while@5
+    // smart_contracts/handshake/contract.py:28
+    // if arr[i] == who:
+    frame_dig -2
+    extract 2 0
+    frame_dig 0
+    intc_2 // 32
+    *
+    intc_2 // 32
+    extract3 // on error: Index access is out of bounds
+    frame_dig -1
+    ==
+    bz _contains_after_if_else@4
+    // smart_contracts/handshake/contract.py:29
+    // return True
+    intc_1 // 1
+    frame_dig -2
+    uncover 3
+    uncover 3
+    retsub
+
+_contains_after_if_else@4:
+    // smart_contracts/handshake/contract.py:30
+    // i = i + UInt64(1)
+    frame_dig 0
+    intc_1 // 1
+    +
+    frame_bury 0
+    b _contains_while_top@1
+
+_contains_after_while@5:
+    // smart_contracts/handshake/contract.py:31
+    // return False
+    intc_0 // 0
+    frame_dig -2
+    uncover 3
+    uncover 3
+    retsub
+
+
+// smart_contracts.handshake.contract.HandshakeApp.request_handshake(other: bytes, loc_hash: bytes) -> uint64:
+request_handshake:
+    // smart_contracts/handshake/contract.py:37-39
+    // # -------- methods --------
+    // @abimethod()
+    // def request_handshake(self, other: Address, loc_hash: DynamicBytes) -> bool:
+    proto 2 1
+    intc_0 // 0
+    dupn 7
+    // smart_contracts/handshake/contract.py:40-41
+    // # disallow self-handshake
+    // assert other.bytes != Txn.sender.bytes, "cannot handshake with self"
+    frame_dig -2
+    txn Sender
+    !=
+    assert // cannot handshake with self
+    // smart_contracts/handshake/contract.py:43
+    // me_key = Txn.sender.bytes
+    txn Sender
+    // smart_contracts/handshake/contract.py:45
+    // now = Global.latest_timestamp  # algopy.UInt64
+    global LatestTimestamp
+    dup
+    // smart_contracts/handshake/contract.py:46
+    // log("now", now)
+    itob
+    dup
+    pushbytes "now"
+    swap
+    concat
+    log
+    // smart_contracts/handshake/contract.py:48-49
+    // # If the other user has a pending request aimed at me, try to complete.
+    // if other_key in self.pending:
+    bytec_3 // 0x703a
+    frame_dig -2
+    concat
+    dup
+    box_len
+    bury 1
+    bz request_handshake_after_if_else@17
+    // smart_contracts/handshake/contract.py:50
+    // pend = self.pending[other_key].copy()  # copy when taking to local
+    frame_dig 11
+    box_get
+    swap
+    dup
+    cover 2
+    frame_bury 7
+    assert // check self.pending entry exists
+    // smart_contracts/handshake/contract.py:51
+    // if pend.other == Address(Txn.sender) and pend.loc_hash.bytes == loc_hash.bytes:
+    extract 0 32 // on error: Index access is out of bounds
+    txn Sender
+    ==
+    bz request_handshake_after_if_else@17
+    frame_dig 7
+    dup
+    intc_2 // 32
+    extract_uint16
+    dig 1
+    len
+    substring3
+    frame_dig -1
+    ==
+    bz request_handshake_after_if_else@17
+    // smart_contracts/handshake/contract.py:52
+    // if self._abs_diff(now, pend.ts.native) <= UInt64(HANDSHAKE_WINDOW_SECS):
+    frame_dig 7
+    pushint 34 // 34
+    extract_uint64
+    dup
+    // smart_contracts/handshake/contract.py:35
+    // return a - b if a >= b else b - a
+    frame_dig 9
+    <=
+    bz request_handshake_ternary_false@20
+    frame_dig 9
+    swap
+    -
+
+request_handshake_ternary_merge@21:
+    // smart_contracts/handshake/contract.py:52
+    // if self._abs_diff(now, pend.ts.native) <= UInt64(HANDSHAKE_WINDOW_SECS):
+    pushint 60 // 60
+    <=
+    bz request_handshake_after_if_else@17
+    // smart_contracts/handshake/contract.py:55
+    // if me_key in self.connections else DynamicArray[Address]()
+    bytec_0 // 0x633a
+    frame_dig 8
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    // smart_contracts/handshake/contract.py:54-55
+    // self.connections[me_key].copy()
+    // if me_key in self.connections else DynamicArray[Address]()
+    bz request_handshake_ternary_false@6
+    // smart_contracts/handshake/contract.py:54
+    // self.connections[me_key].copy()
+    frame_dig 0
+    box_get
+    assert // check self.connections entry exists
+    frame_bury 3
+
+request_handshake_ternary_merge@7:
+    // smart_contracts/handshake/contract.py:59
+    // if other_key in self.connections else DynamicArray[Address]()
+    bytec_0 // 0x633a
+    frame_dig -2
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    // smart_contracts/handshake/contract.py:58-59
+    // self.connections[other_key].copy()
+    // if other_key in self.connections else DynamicArray[Address]()
+    bz request_handshake_ternary_false@9
+    // smart_contracts/handshake/contract.py:58
+    // self.connections[other_key].copy()
+    frame_dig 1
+    box_get
+    assert // check self.connections entry exists
+    frame_bury 5
+
+request_handshake_ternary_merge@10:
+    // smart_contracts/handshake/contract.py:62
+    // if not self._contains(me_list, other):
+    frame_dig 3
+    frame_dig -2
+    callsub _contains
+    dup
+    cover 2
+    frame_bury 3
+    swap
+    frame_bury 4
+    bnz request_handshake_after_if_else@12
+    // smart_contracts/handshake/contract.py:63
+    // me_list.append(other)
+    frame_dig 3
+    extract 2 0
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_2 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    frame_bury 4
+
+request_handshake_after_if_else@12:
+    frame_dig 4
+    frame_bury 3
+    // smart_contracts/handshake/contract.py:64
+    // me_addr = Address(Txn.sender)
+    txn Sender
+    dup
+    frame_bury 2
+    // smart_contracts/handshake/contract.py:65
+    // if not self._contains(other_list, me_addr):
+    frame_dig 5
+    swap
+    callsub _contains
+    dup
+    cover 2
+    frame_bury 5
+    swap
+    frame_bury 6
+    bnz request_handshake_after_if_else@14
+    // smart_contracts/handshake/contract.py:66
+    // other_list.append(me_addr)
+    frame_dig 5
+    extract 2 0
+    frame_dig 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    /
+    itob
+    extract 6 2
+    swap
+    concat
+    frame_bury 6
+
+request_handshake_after_if_else@14:
+    frame_dig 6
+    // smart_contracts/handshake/contract.py:68-69
+    // # write back copies
+    // self.connections[me_key] = me_list.copy()
+    frame_dig 0
+    dup
+    box_del
+    pop
+    frame_dig 3
+    box_put
+    // smart_contracts/handshake/contract.py:70
+    // self.connections[other_key] = other_list.copy()
+    frame_dig 1
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    // smart_contracts/handshake/contract.py:72
+    // del self.pending[other_key]
+    frame_dig 11
+    box_del
+    pop
+    // smart_contracts/handshake/contract.py:73
+    // return True
+    intc_1 // 1
+    frame_bury 0
+    retsub
+
+request_handshake_ternary_false@9:
+    // smart_contracts/handshake/contract.py:59
+    // if other_key in self.connections else DynamicArray[Address]()
+    bytec_1 // 0x0000
+    frame_bury 5
+    b request_handshake_ternary_merge@10
+
+request_handshake_ternary_false@6:
+    // smart_contracts/handshake/contract.py:55
+    // if me_key in self.connections else DynamicArray[Address]()
+    bytec_1 // 0x0000
+    frame_bury 3
+    b request_handshake_ternary_merge@7
+
+request_handshake_after_if_else@17:
+    // smart_contracts/handshake/contract.py:75-80
+    // # Otherwise, (re)record my pending request (copy mutable arg)
+    // self.pending[me_key] = Pending(
+    //     other=other,
+    //     loc_hash=loc_hash.copy(),
+    //     ts=AUInt64(now)
+    // )
+    frame_dig -2
+    pushbytes 0x002a
+    concat
+    frame_dig 10
+    concat
+    frame_dig -1
+    concat
+    // smart_contracts/handshake/contract.py:75-76
+    // # Otherwise, (re)record my pending request (copy mutable arg)
+    // self.pending[me_key] = Pending(
+    bytec_3 // 0x703a
+    frame_dig 8
+    concat
+    // smart_contracts/handshake/contract.py:75-80
+    // # Otherwise, (re)record my pending request (copy mutable arg)
+    // self.pending[me_key] = Pending(
+    //     other=other,
+    //     loc_hash=loc_hash.copy(),
+    //     ts=AUInt64(now)
+    // )
+    dup
+    box_del
+    pop
+    swap
+    box_put
+    // smart_contracts/handshake/contract.py:81
+    // return False
+    intc_0 // 0
+    frame_bury 0
+    retsub
+
+request_handshake_ternary_false@20:
+    // smart_contracts/handshake/contract.py:35
+    // return a - b if a >= b else b - a
+    frame_dig 9
+    -
+    b request_handshake_ternary_merge@21
+
+
+// smart_contracts.handshake.contract.HandshakeApp.get_my_connections() -> bytes:
+get_my_connections:
+    // smart_contracts/handshake/contract.py:83-84
+    // @abimethod()
+    // def get_my_connections(self) -> DynamicArray[Address]:
+    proto 0 1
+    // smart_contracts/handshake/contract.py:88
+    // if me_key in self.connections else DynamicArray[Address]()
+    bytec_0 // 0x633a
+    // smart_contracts/handshake/contract.py:85
+    // me_key = Txn.sender.bytes
+    txn Sender
+    // smart_contracts/handshake/contract.py:88
+    // if me_key in self.connections else DynamicArray[Address]()
+    concat
+    dup
+    box_len
+    bury 1
+    // smart_contracts/handshake/contract.py:87-88
+    // self.connections[me_key].copy()
+    // if me_key in self.connections else DynamicArray[Address]()
+    bz get_my_connections_ternary_false@2
+    // smart_contracts/handshake/contract.py:87
+    // self.connections[me_key].copy()
+    frame_dig 0
+    box_get
+    assert // check self.connections entry exists
+
+get_my_connections_ternary_merge@3:
+    // smart_contracts/handshake/contract.py:86-89
+    // return (
+    //     self.connections[me_key].copy()
+    //     if me_key in self.connections else DynamicArray[Address]()
+    // )
+    swap
+    retsub
+
+get_my_connections_ternary_false@2:
+    // smart_contracts/handshake/contract.py:88
+    // if me_key in self.connections else DynamicArray[Address]()
+    bytec_1 // 0x0000
+    b get_my_connections_ternary_merge@3
