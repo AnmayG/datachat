@@ -70,15 +70,18 @@
 
 .str-chat.str-chat__theme-dark {
     /* Dark theme using the same palette */
-    --str-chat__background-color: var(--app-color-black);
-    --str-chat__secondary-background-color: #1a1a1a;
-    --str-chat__primary-surface-color: var(--app-color-black);
-    --str-chat__secondary-surface-color: var(--app-color-black);
+    --str-chat__background-color: #000000;
+    --str-chat__secondary-background-color: #000000;
+    --str-chat__primary-surface-color: #000000;
+    --str-chat__secondary-surface-color: #2a2a2a;
     --str-chat__accent-color: var(--app-color-blue);
     --str-chat__accent-secondary: var(--app-color-yellow);
     --str-chat__accent-tertiary: var(--app-color-orange);
     --str-chat__active-primary-color: var(--app-color-orange);
     --str-chat__hover-color: var(--app-color-yellow);
+    --str-chat__border-color: rgba(255, 255, 255, 0.1);
+    --str-chat__message-list-background-color: #000000;
+    --str-chat__channel-list-background-color: #000000;
 }
 
 :root {

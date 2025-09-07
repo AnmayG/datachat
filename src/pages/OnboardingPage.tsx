@@ -20,7 +20,7 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
   const steps = [
     {
       id: 'welcome',
-      title: 'Welcome to Social Messenger!',
+      title: 'Welcome to ShakeOnIt!',
       description: 'Let\'s get you set up with your new account'
     },
     {
