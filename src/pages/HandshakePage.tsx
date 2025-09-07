@@ -512,19 +512,19 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
               <div className="active-users-section">
                 <h3>Who's Shaking Hands Right Now</h3>
                 <div className="active-users">
-                  {activeUsers.length === 0 ? (
+                  {activeUsers.filter(user => user.is_shaking).length === 0 ? (
                     <p className="no-users">No one is currently shaking hands</p>
                   ) : (
                     <div className="users-grid">
-                      {activeUsers.map((user) => (
-                        <div key={user.uid} className={`user-card ${user.is_shaking ? 'shaking' : ''}`}>
+                      {activeUsers.filter(user => user.is_shaking).map((user) => (
+                        <div key={user.uid} className="user-card shaking">
                           <div className="user-avatar">
-                            {user.is_shaking ? getHandshakeEmoji(user.handshake_type || 'wave') : '👤'}
+                            {getHandshakeEmoji(user.handshake_type || 'wave')}
                           </div>
                           <div className="user-info">
                             <div className="user-name">{user.name}</div>
                             <div className="user-status">
-                              {user.is_shaking ? `Shaking: ${user.handshake_type || 'unknown'}` : 'Online'}
+                              Shaking: {user.handshake_type || 'unknown'}
                             </div>
                           </div>
                         </div>
