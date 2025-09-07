@@ -61,6 +61,30 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const [recentEvents, setRecentEvents] = useState<HandshakeEvent[]>([]);
   
+  // Track users who have shaken hands recently (last 10 seconds)
+  const getRecentlyActiveUsers = () => {
+    const now = Date.now();
+    const recentThreshold = 10000; // 10 seconds
+    
+    const recentSenders = recentEvents
+      .filter(event => now - event.timestamp < recentThreshold)
+      .map(event => ({
+        uid: event.from_uid,
+        name: event.from_name,
+        handshake_type: event.type,
+        timestamp: event.timestamp
+      }))
+      .reduce((acc, user) => {
+        // Keep only the most recent handshake per user
+        if (!acc[user.uid] || acc[user.uid].timestamp < user.timestamp) {
+          acc[user.uid] = user;
+        }
+        return acc;
+      }, {} as Record<string, { uid: string; name: string; handshake_type: string; timestamp: number }>);
+    
+    return Object.values(recentSenders);
+  };
+  
   const dataBufferRef = useRef<AccelerometerData[]>([]);
   const lastPeakTimeRef = useRef(0);
   const handshakeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -512,11 +536,11 @@ const HandshakePage: React.FC<HandshakePageProps> = ({ user }) => {
               <div className="active-users-section">
                 <h3>Who's Shaking Hands Right Now</h3>
                 <div className="active-users">
-                  {activeUsers.filter(user => user.is_shaking).length === 0 ? (
+                  {getRecentlyActiveUsers().length === 0 ? (
                     <p className="no-users">No one is currently shaking hands</p>
                   ) : (
                     <div className="users-grid">
-                      {activeUsers.filter(user => user.is_shaking).map((user) => (
+                      {getRecentlyActiveUsers().map((user) => (
                         <div key={user.uid} className="user-card shaking">
                           <div className="user-avatar">
                             {getHandshakeEmoji(user.handshake_type || 'wave')}
